@@ -12,6 +12,9 @@
     </p>
 
     <p class="aviso" th:if="${error != null}" th:text="${error}">Error</p>
+    <p class="aviso" th:if="${restaurado != null}">
+        Restaurada la versión <span th:text="${restaurado}"></span>. La versión que había
+        antes sigue en el historial.</p>
     <p class="aviso" th:if="${guardado}">Guardado. La versión <span th:text="${texto.revision()}"></span>
         queda registrada en la auditoría.</p>
 
@@ -71,6 +74,30 @@
             <button type="submit" class="peligro">Retirar artículo</button>
         </form>
     </section>
+
+    <h2>Historial de versiones</h2>
+    <p class="meta" th:if="${#lists.isEmpty(versiones)}">
+        Sin versiones anteriores: este artículo no se ha editado todavía.
+    </p>
+    <div th:unless="${#lists.isEmpty(versiones)}">
+        <details th:each="v : ${versiones}" th:open="${restaurado == #strings.toString(v.revision())}">
+            <summary>
+                <strong th:text="'v' + ${v.revision()}">v1</strong>
+                · <span th:text="${v.editedAt()}">fecha</span>
+                · <span th:text="${v.editedBy()}">autor</span>
+                · <span th:text="${#strings.listJoin(v.changeSummary(), ' · ')}">cambios</span>
+            </summary>
+            <p class="meta" th:text="${v.title()}">titular</p>
+            <pre class="cuerpo" th:text="${v.body()}">cuerpo</pre>
+            <form method="post" th:action="@{/admin/articulos/{id}/restaurar(id=${texto.articleId()})}">
+                <input type="hidden" name="revision" th:value="${v.revision()}">
+                <button type="submit" class="plano"
+                        onclick="return confirm('¿Restaurar esta versión? La actual no se pierde: queda en el historial.')">
+                    Restaurar esta versión
+                </button>
+            </form>
+        </details>
+    </div>
 
     <h2>Auditoría</h2>
     <p class="meta" th:if="${#lists.isEmpty(auditoria)}">Sin movimientos.</p>

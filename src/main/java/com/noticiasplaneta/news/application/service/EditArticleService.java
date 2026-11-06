@@ -4,6 +4,7 @@ import com.noticiasplaneta.news.application.port.in.EditArticleCommand;
 import com.noticiasplaneta.news.application.port.in.EditArticleResult;
 import com.noticiasplaneta.news.application.port.in.EditArticleUseCase;
 import com.noticiasplaneta.news.application.port.out.ArticleRepository;
+import com.noticiasplaneta.news.application.port.out.ArticleRevisionRepository;
 import com.noticiasplaneta.news.application.port.out.CachePurgePort;
 import com.noticiasplaneta.news.application.port.out.SearchIndexPort;
 import com.noticiasplaneta.news.domain.Article;
@@ -27,14 +28,17 @@ public class EditArticleService implements EditArticleUseCase {
     private final AuditPort audit;
     private final CachePurgePort cache;
     private final SearchIndexPort search;
+    private final ArticleRevisionRepository revisions;
     private final Clock clock;
 
     public EditArticleService(ArticleRepository articles, AuditPort audit, CachePurgePort cache,
-                              SearchIndexPort search, Clock clock) {
+                              SearchIndexPort search, ArticleRevisionRepository revisions,
+                              Clock clock) {
         this.articles = articles;
         this.audit = audit;
         this.cache = cache;
         this.search = search;
+        this.revisions = revisions;
         this.clock = clock;
     }
 
@@ -45,7 +49,16 @@ public class EditArticleService implements EditArticleUseCase {
                         "No existe el artículo " + command.articleId()));
 
         String tituloAntes = article.title();
+        String cuerpoAntes = article.body();
         int revisionAntes = article.revisionCount();
+
+        // Se guarda cómo estaba ANTES de cambiarlo: así el historial siempre permite volver.
+        if (!tituloAntes.equals(command.title() == null ? "" : command.title().trim())
+                || !cuerpoAntes.equals(command.body() == null ? "" : command.body().trim())) {
+            revisions.save(article.id().toString(), new ArticleRevisionRepository.Snapshot(
+                    revisionAntes, tituloAntes, cuerpoAntes,
+                    command.actor().id(), clock.instant().toString(), "edición"));
+        }
 
         article.edit(command.title(), command.body(), command.expectedRevision());
 

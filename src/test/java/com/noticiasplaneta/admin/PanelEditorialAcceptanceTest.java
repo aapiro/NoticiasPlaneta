@@ -324,4 +324,67 @@ class PanelEditorialAcceptanceTest {
                 .andExpect(content().string(org.hamcrest.Matchers
                         .containsString("Titular reescrito después de publicar")));
     }
+
+    // ---------- versionado ----------
+
+    @Test
+    @DisplayName("Al editar queda la versión anterior en el historial")
+    void historial() throws Exception {
+        String id = borrador("Titular que se va a editar dos veces");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/editar").with(conSesion(session)).with(csrf())
+                        .param("title", "Primera corrección").param("body", "Cuerpo corregido una vez.")
+                        .param("revision", "1"))
+                .andExpect(status().is3xxRedirection());
+
+        mvc.perform(get("/admin/articulos/" + id).with(conSesion(session)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Historial de versiones")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("v1")));
+
+        Integer guardadas = jdbc.queryForObject(
+                "select count(*) from article_revision where article_id = ?::uuid", Integer.class, id);
+        org.assertj.core.api.Assertions.assertThat(guardadas).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Restaurar una versión devuelve el texto y no pierde la actual")
+    void restaura() throws Exception {
+        String id = borrador("Titular original que se restaurará");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/editar").with(conSesion(session)).with(csrf())
+                        .param("title", "Titular destrozado por error")
+                        .param("body", "Cuerpo con una errata grave.")
+                        .param("revision", "1"))
+                .andExpect(status().is3xxRedirection());
+
+        mvc.perform(post("/admin/articulos/" + id + "/restaurar").with(conSesion(session)).with(csrf())
+                        .param("revision", "1"))
+                .andExpect(status().is3xxRedirection());
+
+        var fila = jdbc.queryForMap("select title, body, revision_count from article where id = ?::uuid", id);
+        org.assertj.core.api.Assertions.assertThat(fila.get("title"))
+                .isEqualTo("Titular original que se restaurará");
+        org.assertj.core.api.Assertions.assertThat(fila.get("revision_count")).isEqualTo(3);
+
+        Integer guardadas = jdbc.queryForObject(
+                "select count(*) from article_revision where article_id = ?::uuid", Integer.class, id);
+        org.assertj.core.api.Assertions.assertThat(guardadas).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Restaurar una versión que no existe falla sin tocar el artículo")
+    void restauraInexistente() throws Exception {
+        String id = borrador("Titular sin versiones guardadas");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/restaurar").with(conSesion(session)).with(csrf())
+                        .param("revision", "99"))
+                .andExpect(status().isBadRequest());
+
+        String titulo = jdbc.queryForObject("select title from article where id = ?::uuid", String.class, id);
+        org.assertj.core.api.Assertions.assertThat(titulo).isEqualTo("Titular sin versiones guardadas");
+    }
 }

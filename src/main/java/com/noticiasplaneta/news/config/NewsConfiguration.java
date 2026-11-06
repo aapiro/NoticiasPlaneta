@@ -9,6 +9,11 @@ import com.noticiasplaneta.news.application.port.out.ArticleQueryRepository;
 import com.noticiasplaneta.news.application.port.in.EditArticleUseCase;
 import com.noticiasplaneta.news.application.service.ArticleAdminQueryService;
 import com.noticiasplaneta.news.application.service.EditArticleService;
+import com.noticiasplaneta.news.application.service.ListArticleRevisionsService;
+import com.noticiasplaneta.news.application.service.RestoreArticleRevisionService;
+import com.noticiasplaneta.news.application.port.in.ListArticleRevisionsUseCase;
+import com.noticiasplaneta.news.application.port.in.RestoreArticleRevisionUseCase;
+import com.noticiasplaneta.news.application.port.out.ArticleRevisionRepository;
 import com.noticiasplaneta.news.application.service.ArticleQueryService;
 import com.noticiasplaneta.news.application.port.in.StoreArticleEmbeddingUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
@@ -39,8 +44,22 @@ class NewsConfiguration {
 
     @Bean
     EditArticleUseCase editArticleUseCase(ArticleRepository articles, AuditPort audit,
-                                          CachePurgePort cache, SearchIndexPort search, Clock clock) {
-        return new EditArticleService(articles, audit, cache, search, clock);
+                                          CachePurgePort cache, SearchIndexPort search,
+                                          ArticleRevisionRepository revisions, Clock clock) {
+        return new EditArticleService(articles, audit, cache, search, revisions, clock);
+    }
+
+    @Bean
+    ListArticleRevisionsUseCase listArticleRevisionsUseCase(ArticleRevisionRepository revisions,
+                                                            ArticleRepository articles) {
+        return new ListArticleRevisionsService(revisions, articles);
+    }
+
+    @Bean
+    RestoreArticleRevisionUseCase restoreArticleRevisionUseCase(
+            ArticleRepository articles, ArticleRevisionRepository revisions,
+            EditArticleUseCase editArticle, AuditPort audit, Clock clock) {
+        return new RestoreArticleRevisionService(articles, revisions, editArticle, audit, clock);
     }
 
     @Bean

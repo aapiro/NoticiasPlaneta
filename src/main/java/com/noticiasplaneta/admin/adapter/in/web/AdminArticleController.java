@@ -3,7 +3,9 @@ package com.noticiasplaneta.admin.adapter.in.web;
 import com.noticiasplaneta.news.application.port.in.EditArticleCommand;
 import com.noticiasplaneta.news.application.port.in.EditArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.GetArticleTextUseCase;
+import com.noticiasplaneta.news.application.port.in.ListArticleRevisionsUseCase;
 import com.noticiasplaneta.news.application.port.in.ListArticlesUseCase;
+import com.noticiasplaneta.news.application.port.in.RestoreArticleRevisionUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
@@ -36,22 +38,29 @@ class AdminArticleController {
     private final TransitionArticleUseCase transition;
     private final UnpublishArticleUseCase unpublish;
     private final EditArticleUseCase editArticle;
+    private final ListArticleRevisionsUseCase historial;
+    private final RestoreArticleRevisionUseCase restaurar;
 
     AdminArticleController(GetArticleTextUseCase articleText, ListArticlesUseCase bandeja,
                            TransitionArticleUseCase transition, UnpublishArticleUseCase unpublish,
-                           EditArticleUseCase editArticle) {
+                           EditArticleUseCase editArticle, ListArticleRevisionsUseCase historial,
+                           RestoreArticleRevisionUseCase restaurar) {
         this.articleText = articleText;
         this.bandeja = bandeja;
         this.transition = transition;
         this.unpublish = unpublish;
         this.editArticle = editArticle;
+        this.historial = historial;
+        this.restaurar = restaurar;
     }
 
     @GetMapping("/admin/articulos/{id}")
     ModelAndView editor(@PathVariable String id,
-                        @RequestParam(required = false) String guardado) {
+                        @RequestParam(required = false) String guardado,
+                        @RequestParam(required = false) String restaurado) {
         ModelAndView mav = render(id, null, null);
         mav.addObject("guardado", guardado != null);
+        mav.addObject("restaurado", restaurado);
         return mav;
     }
 
@@ -65,6 +74,18 @@ class AdminArticleController {
             editArticle.edit(new EditArticleCommand(id, title, body, revision,
                     AdminActor.from(authentication)));
             return new ModelAndView("redirect:/admin/articulos/" + id + "?guardado=1");
+        } catch (DomainException e) {
+            return render(id, statusFor(e), e.getMessage());
+        }
+    }
+
+    @PostMapping("/admin/articulos/{id}/restaurar")
+    ModelAndView restaurarVersion(@PathVariable String id,
+                                  @RequestParam int revision,
+                                  Authentication authentication) {
+        try {
+            restaurar.restore(id, revision, AdminActor.from(authentication));
+            return new ModelAndView("redirect:/admin/articulos/" + id + "?restaurado=" + revision);
         } catch (DomainException e) {
             return render(id, statusFor(e), e.getMessage());
         }
@@ -117,6 +138,7 @@ class AdminArticleController {
         // RN2: las transiciones posibles las dicta el dominio, no la plantilla
         mav.addObject("transiciones", bandeja.transitionsFrom(estado));
         mav.addObject("etiquetas", ETIQUETAS);
+        mav.addObject("versiones", historial.revisions(id));
         mav.addObject("publicado", "PUBLISHED".equals(estado));
         mav.addObject("tiposRetirada", bandeja.retirementKinds());
         return mav;

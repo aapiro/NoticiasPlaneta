@@ -54,6 +54,15 @@ class ArticleJpaEntity {
     @Column(name = "created_at", nullable = false)
     Instant createdAt;
 
+    @Column(name = "unpublished_at")
+    Instant unpublishedAt;
+
+    @Column(name = "unpublish_reason")
+    String unpublishReason;
+
+    @Column(name = "correction_note")
+    String correctionNote;
+
     protected ArticleJpaEntity() {
     }
 }

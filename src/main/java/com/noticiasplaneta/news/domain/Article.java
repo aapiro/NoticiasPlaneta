@@ -25,10 +25,14 @@ public final class Article {
     private Instant publishedAt;
     private Instant scheduledAt;
     private Instant createdAt;
+    private Instant unpublishedAt;
+    private String unpublishReason;
+    private String correctionNote;
 
     private Article(ArticleId id, String language, String sectionId, ArticleOrigin origin,
                     String ingestItemId, Slug slug, String title, ArticleState state,
-                    int revisionCount, Instant publishedAt, Instant scheduledAt, Instant createdAt) {
+                    int revisionCount, Instant publishedAt, Instant scheduledAt, Instant createdAt,
+                    Instant unpublishedAt, String unpublishReason, String correctionNote) {
         this.id = id;
         this.language = language;
         this.sectionId = sectionId;
@@ -41,6 +45,9 @@ public final class Article {
         this.publishedAt = publishedAt;
         this.scheduledAt = scheduledAt;
         this.createdAt = createdAt;
+        this.unpublishedAt = unpublishedAt;
+        this.unpublishReason = unpublishReason;
+        this.correctionNote = correctionNote;
     }
 
     public static Article draft(String language, String sectionId, ArticleOrigin origin,
@@ -56,14 +63,38 @@ public final class Article {
         }
         Objects.requireNonNull(slug, "slug");
         return new Article(ArticleId.newId(), language, sectionId, origin, ingestItemId,
-                slug, title.trim(), ArticleState.DRAFT, 1, null, null, now);
+                slug, title.trim(), ArticleState.DRAFT, 1, null, null, now, null, null, null);
     }
 
     public static Article rehydrate(ArticleId id, String language, String sectionId, ArticleOrigin origin,
                                     String ingestItemId, Slug slug, String title, ArticleState state,
-                                    int revisionCount, Instant publishedAt, Instant scheduledAt, Instant createdAt) {
+                                    int revisionCount, Instant publishedAt, Instant scheduledAt, Instant createdAt,
+                                    Instant unpublishedAt, String unpublishReason, String correctionNote) {
         return new Article(id, language, sectionId, origin, ingestItemId, slug, title, state,
-                revisionCount, publishedAt, scheduledAt, createdAt);
+                revisionCount, publishedAt, scheduledAt, createdAt,
+                unpublishedAt, unpublishReason, correctionNote);
+    }
+
+    /** F07: retirada. El contenido no se borra, se archiva con su motivo. */
+    public void markUnpublished(String reason, Instant now) {
+        if (reason == null || reason.isBlank()) {
+            throw new DomainException("REASON_REQUIRED", "Una retirada exige motivo");
+        }
+        this.unpublishedAt = now;
+        this.unpublishReason = reason.trim();
+    }
+
+    /** F07: corrección o rectificación. El artículo sigue publicado, con nota visible. */
+    public void correct(String note, UnpublishKind kind, Instant now) {
+        if (note == null || note.isBlank()) {
+            throw new DomainException("REASON_REQUIRED", "Una corrección exige nota");
+        }
+        if (this.state != ArticleState.PUBLISHED) {
+            throw new DomainException("CORRECTION_NOT_PUBLISHED",
+                    "Solo se corrige lo que está publicado");
+        }
+        this.correctionNote = kind.name() + ": " + note.trim();
+        this.revisionCount++;
     }
 
     /** Aplica una transición autorizada. Devuelve el estado anterior. */
@@ -104,4 +135,7 @@ public final class Article {
     public Instant publishedAt() { return publishedAt; }
     public Instant scheduledAt() { return scheduledAt; }
     public Instant createdAt() { return createdAt; }
+    public Instant unpublishedAt() { return unpublishedAt; }
+    public String unpublishReason() { return unpublishReason; }
+    public String correctionNote() { return correctionNote; }
 }

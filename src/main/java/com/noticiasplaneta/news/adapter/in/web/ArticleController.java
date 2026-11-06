@@ -5,6 +5,9 @@ import com.noticiasplaneta.news.application.port.in.CreateDraftFromItemUseCase;
 import com.noticiasplaneta.news.application.port.in.CreateDraftResult;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
+import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
+import com.noticiasplaneta.news.application.port.in.UnpublishCommand;
+import com.noticiasplaneta.news.domain.UnpublishKind;
 import com.noticiasplaneta.news.domain.Actor;
 import com.noticiasplaneta.news.domain.ActorType;
 import com.noticiasplaneta.news.domain.Article;
@@ -29,10 +32,13 @@ class ArticleController {
 
     private final CreateDraftFromItemUseCase createDraft;
     private final TransitionArticleUseCase transition;
+    private final UnpublishArticleUseCase unpublish;
 
-    ArticleController(CreateDraftFromItemUseCase createDraft, TransitionArticleUseCase transition) {
+    ArticleController(CreateDraftFromItemUseCase createDraft, TransitionArticleUseCase transition,
+                      UnpublishArticleUseCase unpublish) {
         this.createDraft = createDraft;
         this.transition = transition;
+        this.unpublish = unpublish;
     }
 
     record NewDraftRequest(
@@ -57,10 +63,17 @@ class ArticleController {
             String reason) {
     }
 
-    record ArticleResponse(String id, String slug, String state, String publishedAt) {
+    record UnpublishRequest(@NotBlank String kind, @NotBlank String reason,
+                            @NotBlank String actorId, @NotBlank String actorType,
+                            Set<String> roles, Set<String> sections) {
+    }
+
+    record ArticleResponse(String id, String slug, String state, String publishedAt,
+                           String correctionNote) {
         static ArticleResponse of(Article a) {
             return new ArticleResponse(a.id().toString(), a.slug().value(), a.state().name(),
-                    a.publishedAt() == null ? null : a.publishedAt().toString());
+                    a.publishedAt() == null ? null : a.publishedAt().toString(),
+                    a.correctionNote());
         }
     }
 
@@ -82,6 +95,24 @@ class ArticleController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new DraftResponse(result.articleId().toString(), result.slug().value(),
                         "DRAFT", result.created()));
+    }
+
+    @PostMapping("/{id}/unpublish")
+    ResponseEntity<ArticleResponse> unpublish(@PathVariable String id,
+                                              @Valid @RequestBody UnpublishRequest request) {
+        Actor actor = new Actor(
+                request.actorId(),
+                ActorType.valueOf(request.actorType().toUpperCase()),
+                request.roles() == null ? Set.of() : request.roles(),
+                request.sections() == null ? Set.of() : request.sections());
+
+        Article article = unpublish.unpublish(new UnpublishCommand(
+                ArticleId.of(id),
+                UnpublishKind.valueOf(request.kind().toUpperCase()),
+                request.reason(),
+                actor));
+
+        return ResponseEntity.ok(ArticleResponse.of(article));
     }
 
     @PostMapping("/{id}/transitions")

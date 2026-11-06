@@ -68,6 +68,9 @@ class ArticleRepositoryAdapter implements ArticleRepository {
         e.publishedAt = a.publishedAt();
         e.scheduledAt = a.scheduledAt();
         e.createdAt = a.createdAt();
+        e.unpublishedAt = a.unpublishedAt();
+        e.unpublishReason = a.unpublishReason();
+        e.correctionNote = a.correctionNote();
         return e;
     }
 
@@ -75,6 +78,7 @@ class ArticleRepositoryAdapter implements ArticleRepository {
         return Article.rehydrate(
                 new ArticleId(e.id), e.language, e.sectionId, e.origin, e.ingestItemId,
                 new Slug(e.slug), e.title, e.state, e.revisionCount,
-                e.publishedAt, e.scheduledAt, e.createdAt);
+                e.publishedAt, e.scheduledAt, e.createdAt,
+                e.unpublishedAt, e.unpublishReason, e.correctionNote);
     }
 }

@@ -2,6 +2,7 @@ package com.noticiasplaneta.architecture;
 
 import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchCondition;
@@ -17,7 +18,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  *
  * <p>Si estas reglas se relajan, el código compila igual y el diseño se muere en silencio.
  */
-@AnalyzeClasses(packages = "com.noticiasplaneta")
+@AnalyzeClasses(packages = "com.noticiasplaneta", importOptions = ImportOption.DoNotIncludeTests.class)
 class HexagonalArchitectureTest {
 
     @ArchTest

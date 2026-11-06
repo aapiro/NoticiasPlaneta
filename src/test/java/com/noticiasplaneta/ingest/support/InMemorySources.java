@@ -27,6 +27,13 @@ public class InMemorySources implements SourceRepository {
     }
 
     @Override
+    public Optional<Source> findByFeedUrl(String feedUrl) {
+        return data.values().stream()
+                .filter(s -> s.feedUrl().equals(feedUrl))
+                .findFirst();
+    }
+
+    @Override
     public List<Source> findByState(SourceState state) {
         return data.values().stream().filter(s -> s.state() == state).toList();
     }

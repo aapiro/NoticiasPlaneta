@@ -11,6 +11,8 @@ public interface SourceRepository {
 
     Source save(Source source);
 
+    Optional<Source> findByFeedUrl(String feedUrl);
+
     Optional<Source> findById(SourceId id);
 
     List<Source> findByState(SourceState state);

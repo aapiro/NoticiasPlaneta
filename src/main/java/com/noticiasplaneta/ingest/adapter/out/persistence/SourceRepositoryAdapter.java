@@ -33,6 +33,12 @@ class SourceRepositoryAdapter implements SourceRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<Source> findByFeedUrl(String feedUrl) {
+        return jpa.findFirstByFeedUrl(feedUrl).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Source> findByState(SourceState state) {
         return jpa.findByState(state).stream().map(this::toDomain).toList();
     }

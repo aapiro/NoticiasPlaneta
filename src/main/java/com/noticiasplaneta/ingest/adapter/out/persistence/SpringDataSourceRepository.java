@@ -9,4 +9,6 @@ import java.util.UUID;
 interface SpringDataSourceRepository extends JpaRepository<SourceJpaEntity, UUID> {
 
     List<SourceJpaEntity> findByState(SourceState state);
+
+    java.util.Optional<SourceJpaEntity> findFirstByFeedUrl(String feedUrl);
 }

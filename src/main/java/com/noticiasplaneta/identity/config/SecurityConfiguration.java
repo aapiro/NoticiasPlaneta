@@ -58,6 +58,8 @@ public class SecurityConfiguration {
         http.securityMatcher("/api/v1/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        // lectura pública: la portada y el buscador no piden credenciales
+                        .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
                         // la URL prefirmada lleva su propia firma HMAC: no necesita sesión
                         .requestMatchers(HttpMethod.PUT, "/api/v1/media/blob/**").permitAll()
                         .anyRequest().hasAnyRole("AGENT", "ADMIN", "CHIEF"))

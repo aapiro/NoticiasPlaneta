@@ -69,6 +69,27 @@ solo es accesible dentro de la red de Compose.
 Todas las rutas de escritura exigen la cabecera `X-Api-Key` (agentes). La URL prefirmada de
 subida lleva su propia firma HMAC y no necesita cabecera.
 
+## Panel editorial
+
+`/admin` — requiere sesión. La primera cuenta se crea al arrancar desde tres variables de
+entorno (no hay credenciales por defecto en el código):
+
+```bash
+ADMIN_EMAIL=tu@correo
+ADMIN_PASSWORD_HASH='$2a$12$...'   # BCrypt, coste 12
+ADMIN_TOTP_SECRET=BASE32...        # secreto TOTP (RFC 6238)
+```
+
+| Pantalla | Qué hace |
+|---|---|
+| `/admin/login` | email + contraseña + TOTP en un solo paso |
+| `/admin` | bandeja con filtros por estado, sección y texto |
+| `/admin/articulos/{id}` | editor, transiciones permitidas, auditoría y retirada |
+
+El panel **no reimplementa reglas**: llama a los mismos casos de uso que la API, y las
+transiciones que ofrece salen del dominio. La autenticación es provisional (ADR-010):
+contraseña + TOTP, y **no debe exponerse a Internet** hasta migrar a passkeys.
+
 ## Estado
 
 | Flujo | Estado |
@@ -81,3 +102,4 @@ subida lleva su propia firma HMAC y no necesita cabecera.
 | F10 Búsqueda híbrida | implementado y probado |
 | F03 Enriquecido (DeepSeek) | implementado; requiere `DEEPSEEK_API_KEY` |
 | F12 Servidor MCP | 3 herramientas para agentes, sin herramienta de publicación |
+| F13 Panel editorial | bandeja, editor, transiciones y retirada; auth provisional (ADR-010) |

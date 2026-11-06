@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Bandeja — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Bandeja</h1>
+
+    <nav class="chips" aria-label="Filtrar por estado">
+        <a class="chip" th:href="@{/admin}" th:aria-current="${estado == null}">
+            Todos <span th:text="${contadores.getOrDefault('_', 0) == 0 ? '' : ''}"></span>
+        </a>
+        <a th:each="c : ${contadores}" class="chip" th:href="@{/admin(estado=${c.key})}"
+           th:aria-current="${estado == c.key}"
+           th:text="${c.key + ' (' + c.value + ')'}">ESTADO (0)</a>
+    </nav>
+
+    <form method="get" th:action="@{/admin}" style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+        <input type="text" name="q" th:value="${q}" placeholder="Buscar por titular…" style="flex:1;min-width:14rem">
+        <input type="text" name="seccion" th:value="${seccion}" placeholder="Sección" style="width:10rem">
+        <input type="hidden" name="estado" th:value="${estado}">
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <p class="meta" th:if="${#lists.isEmpty(articulos)}">No hay artículos con estos filtros.</p>
+
+    <table th:unless="${#lists.isEmpty(articulos)}">
+        <thead>
+        <tr><th>Titular</th><th>Sección</th><th>Estado</th><th>Origen</th><th>Creado</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${articulos}">
+            <td><a th:href="@{/admin/articulos/{id}(id=${a.id()})}" th:text="${a.title()}">Titular</a></td>
+            <td class="meta" th:text="${a.sectionId()}">seccion</td>
+            <td><span class="estado" th:classappend="${a.state()}" th:text="${a.state()}">DRAFT</span></td>
+            <td class="meta" th:text="${a.origin()}">INGEST</td>
+            <td class="meta" th:text="${a.createdLabel()}">fecha</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

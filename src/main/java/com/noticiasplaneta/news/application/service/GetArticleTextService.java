@@ -19,6 +19,6 @@ public class GetArticleTextService implements GetArticleTextUseCase {
     public Optional<ArticleText> byId(UUID articleId) {
         return articles.findById(new com.noticiasplaneta.news.domain.ArticleId(articleId))
                 .map(a -> new ArticleText(a.id().value(), a.title(), a.body(),
-                        a.sectionId(), a.state().name()));
+                        a.sectionId(), a.state().name(), a.origin().name()));
     }
 }

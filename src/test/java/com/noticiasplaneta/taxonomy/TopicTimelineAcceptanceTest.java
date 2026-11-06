@@ -5,7 +5,7 @@ import com.noticiasplaneta.news.application.port.in.CreateDraftFromItemUseCase;
 import com.noticiasplaneta.news.application.port.in.CreateDraftResult;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
-import com.noticiasplaneta.news.domain.Actor;
+import com.noticiasplaneta.shared.domain.Actor;
 import com.noticiasplaneta.news.domain.ArticleOrigin;
 import com.noticiasplaneta.news.domain.ArticleState;
 import org.junit.jupiter.api.BeforeEach;

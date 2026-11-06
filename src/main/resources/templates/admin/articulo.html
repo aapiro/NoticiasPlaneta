@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Artículo — Panel', ~{::main})}">
+<body>
+<main>
+    <p class="meta"><a th:href="@{/admin}">← Bandeja</a></p>
+
+    <h1 th:text="${texto.title()}">Titular</h1>
+    <p class="meta">
+        <span class="estado" th:classappend="${estado}" th:text="${estado}">DRAFT</span>
+        · <span th:text="${texto.sectionId()}">seccion</span>
+        · <span th:text="${texto.origin()}">origen</span>
+    </p>
+
+    <p class="aviso" th:if="${error != null}" th:text="${error}">Error</p>
+
+    <p class="aviso" th:if="${publicado}">
+        Este artículo está publicado. Cualquier cambio crea una revisión nueva y queda auditado;
+        el texto que ven los lectores no cambia hasta que se vuelva a publicar.
+    </p>
+
+    <h2>Cuerpo</h2>
+    <div class="cuerpo" th:text="${texto.body()}">Cuerpo</div>
+
+    <h2>Acciones</h2>
+    <div class="acciones">
+        <form th:each="t : ${transiciones}" class="inline" method="post"
+              th:action="@{/admin/articulos/{id}/transicion(id=${texto.articleId()})}">
+            <input type="hidden" name="destino" th:value="${t}">
+            <button type="submit" th:text="${t}">PUBLICAR</button>
+        </form>
+        <p class="meta" th:if="${#lists.isEmpty(transiciones)}">
+            No hay transiciones disponibles desde este estado.
+        </p>
+    </div>
+
+    <section th:if="${publicado}">
+        <h2>Retirar o corregir</h2>
+        <p class="meta">
+            El motivo es obligatorio y se publica junto al aviso. Una retirada deja el artículo
+            inaccesible (410) y conserva el registro.
+        </p>
+        <form method="post" th:action="@{/admin/articulos/{id}/retirar(id=${texto.articleId()})}">
+            <div class="campo">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo">
+                    <option th:each="t : ${tiposRetirada}" th:value="${t}" th:text="${t}">RETIRADA</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="motivo">Motivo (mínimo 20 caracteres)</label>
+                <textarea id="motivo" name="motivo" required minlength="20"
+                          placeholder="Explica qué se retira y por qué…"></textarea>
+            </div>
+            <button type="submit" class="peligro">Retirar artículo</button>
+        </form>
+    </section>
+
+    <h2>Auditoría</h2>
+    <p class="meta" th:if="${#lists.isEmpty(auditoria)}">Sin movimientos.</p>
+    <table th:unless="${#lists.isEmpty(auditoria)}">
+        <thead><tr><th>Cuándo</th><th>Quién</th><th>Acción</th><th>Cambio</th></tr></thead>
+        <tbody>
+        <tr th:each="e : ${auditoria}">
+            <td class="meta" th:text="${e.at()}">fecha</td>
+            <td class="meta" th:text="${e.actor()}">actor</td>
+            <td class="meta" th:text="${e.action()}">acción</td>
+            <td class="meta" th:text="${e.before() + ' → ' + e.after()}">cambio</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

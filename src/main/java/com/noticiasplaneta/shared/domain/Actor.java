@@ -1,4 +1,4 @@
-package com.noticiasplaneta.news.domain;
+package com.noticiasplaneta.shared.domain;
 
 import java.util.Objects;
 import java.util.Set;

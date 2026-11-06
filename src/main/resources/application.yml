@@ -31,6 +31,12 @@ management:
       exposure:
         include: health,info
 
+admin:
+  bootstrap:
+    email: ${ADMIN_EMAIL:}
+    password-hash: ${ADMIN_PASSWORD_HASH:}
+    totp-secret: ${ADMIN_TOTP_SECRET:}
+
 security:
   api-key: ${AGENT_API_KEY:}
   agent-id: ${AGENT_ID:newsroom-agent}

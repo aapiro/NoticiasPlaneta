@@ -7,7 +7,7 @@ import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishCommand;
-import com.noticiasplaneta.news.domain.Actor;
+import com.noticiasplaneta.shared.domain.Actor;
 import com.noticiasplaneta.news.domain.Article;
 import com.noticiasplaneta.news.domain.ArticleOrigin;
 import com.noticiasplaneta.news.domain.ArticleState;

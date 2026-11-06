@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:fragment="page(titulo, contenido)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo}">Panel — Noticias Planeta</title>
+    <style>
+        :root { color-scheme: light dark; --tinta:#111; --papel:#fff; --tenue:#666; --linea:#ddd;
+                --acento:#1d4ed8; --aviso:#b45309; }
+        @media (prefers-color-scheme: dark) {
+            :root { --tinta:#e9edf5; --papel:#0f1218; --tenue:#98a2b3; --linea:#242b36; --acento:#7aa2ff; }
+        }
+        * { box-sizing: border-box; }
+        body { margin:0; background:var(--papel); color:var(--tinta);
+               font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+        header { display:flex; justify-content:space-between; align-items:center;
+                 padding:.75rem 1.25rem; border-bottom:1px solid var(--linea); gap:1rem; flex-wrap:wrap; }
+        .marca { font-weight:700; text-decoration:none; color:var(--tinta); }
+        header form { margin:0; }
+        main { max-width:62rem; margin:0 auto; padding:1.5rem 1.25rem 4rem; display:block; }
+        h1 { font-size:1.4rem; margin:0 0 1rem; letter-spacing:-.02em; }
+        h2 { font-size:1.05rem; margin:1.75rem 0 .5rem; }
+        table { width:100%; border-collapse:collapse; font-size:.9rem; }
+        th, td { text-align:left; padding:.5rem .4rem; border-bottom:1px solid var(--linea); vertical-align:top; }
+        th { font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--tenue); }
+        a { color:var(--acento); }
+        .chips { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1rem; }
+        .chip { border:1px solid var(--linea); border-radius:999px; padding:.2rem .65rem;
+                text-decoration:none; color:var(--tenue); font-size:.82rem; }
+        .chip[aria-current="true"] { border-color:var(--acento); color:var(--acento); font-weight:600; }
+        .estado { font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+                  padding:.1rem .45rem; border-radius:4px; background:rgba(29,78,216,.12); color:var(--acento); }
+        .estado.PUBLISHED { background:rgba(22,163,74,.15); color:#16a34a; }
+        .estado.ARCHIVED  { background:rgba(180,83,9,.15); color:var(--aviso); }
+        form.inline { display:inline; }
+        input, select, textarea, button { font:inherit; }
+        input[type=text], input[type=email], input[type=password], select, textarea {
+            width:100%; padding:.55rem .7rem; border:1px solid var(--linea); border-radius:6px;
+            background:var(--papel); color:var(--tinta); }
+        textarea { min-height:9rem; resize:vertical; }
+        button { padding:.5rem .9rem; border-radius:6px; cursor:pointer;
+                 border:1px solid var(--acento); background:var(--acento); color:#fff; }
+        button.peligro { border-color:#b91c1c; background:#b91c1c; }
+        button.plano { background:transparent; color:var(--tinta); border-color:var(--linea); }
+        :focus-visible { outline:3px solid var(--acento); outline-offset:2px; }
+        .error { border-left:3px solid #b91c1c; background:rgba(185,28,28,.08);
+                 padding:.6rem .8rem; margin-bottom:1rem; }
+        .aviso { border-left:3px solid var(--aviso); background:rgba(180,83,9,.08);
+                 padding:.6rem .8rem; margin:1rem 0; font-size:.9rem; }
+        .campo { margin-bottom:.9rem; }
+        label { display:block; font-size:.82rem; color:var(--tenue); margin-bottom:.25rem; }
+        .meta { color:var(--tenue); font-size:.85rem; }
+        .cuerpo { white-space:pre-wrap; background:rgba(127,127,127,.06); padding:1rem;
+                  border-radius:6px; border:1px solid var(--linea); }
+        .acciones { display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0; }
+    </style>
+</head>
+<body>
+<header>
+    <a class="marca" th:href="@{/admin}">Panel · Noticias Planeta</a>
+    <form th:action="@{/admin/logout}" method="post" class="inline">
+        <button type="submit" class="plano">Salir</button>
+    </form>
+</header>
+<main th:replace="${contenido}"></main>
+</body>
+</html>

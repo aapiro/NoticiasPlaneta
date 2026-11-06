@@ -1,4 +1,4 @@
-package com.noticiasplaneta.news.domain;
+package com.noticiasplaneta.shared.domain;
 
 public enum ActorType {
     HUMAN,

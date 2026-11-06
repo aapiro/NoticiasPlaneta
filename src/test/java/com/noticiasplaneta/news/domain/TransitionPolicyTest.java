@@ -1,5 +1,7 @@
 package com.noticiasplaneta.news.domain;
 
+import com.noticiasplaneta.shared.domain.Actor;
+
 import com.noticiasplaneta.shared.domain.DomainException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

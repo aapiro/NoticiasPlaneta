@@ -18,7 +18,10 @@ import org.springframework.security.web.webauthn.management.JdbcUserCredentialRe
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.security.web.webauthn.management.UserCredentialRepository;
 
+import com.noticiasplaneta.identity.adapter.in.security.AdminLoginFilter;
 import com.noticiasplaneta.identity.adapter.in.security.ApiKeyAuthenticationFilter;
+import com.noticiasplaneta.identity.application.AdminAuthenticator;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 /**
  * ADR-004: dos superficies, dos cadenas.
@@ -80,6 +83,23 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(3)
+    SecurityFilterChain adminChain(HttpSecurity http, AdminAuthenticator authenticator) throws Exception {
+        http.securityMatcher("/admin/**")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/admin/login").permitAll()
+                        .anyRequest().authenticated())
+                .exceptionHandling(e -> e.authenticationEntryPoint(
+                        new LoginUrlAuthenticationEntryPoint("/admin/login")))
+                .addFilterBefore(new AdminLoginFilter(authenticator),
+                        UsernamePasswordAuthenticationFilter.class)
+                .logout(l -> l.logoutUrl("/admin/logout").logoutSuccessUrl("/admin/login"))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .csrf(org.springframework.security.config.Customizer.withDefaults());
+        return http.build();
+    }
+
+    @Bean
+    @Order(4)
     SecurityFilterChain webChain(HttpSecurity http, SecurityProperties properties) throws Exception {
         http.authorizeHttpRequests(auth -> auth
                         // el sitio público es de solo lectura; toda escritura va por la API

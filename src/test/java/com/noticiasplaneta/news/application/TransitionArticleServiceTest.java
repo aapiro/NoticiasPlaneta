@@ -4,7 +4,7 @@ import com.noticiasplaneta.ingest.support.InMemoryEventPublisher;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
 import com.noticiasplaneta.shared.events.ArticleStateChanged;
 import com.noticiasplaneta.news.application.service.TransitionArticleService;
-import com.noticiasplaneta.news.domain.Actor;
+import com.noticiasplaneta.shared.domain.Actor;
 import com.noticiasplaneta.news.domain.Article;
 import com.noticiasplaneta.news.domain.ArticleOrigin;
 import com.noticiasplaneta.news.domain.ArticleState;

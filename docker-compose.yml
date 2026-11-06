@@ -27,6 +27,9 @@ services:
       MEDIA_ROOT: /data/media
       OLLAMA_URL: http://ollama:11434
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      ADMIN_TOTP_SECRET: ${ADMIN_TOTP_SECRET:-}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
     depends_on:
       db:

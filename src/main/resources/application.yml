@@ -11,6 +11,14 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  ai:
+    mcp:
+      server:
+        name: noticiasplaneta
+        version: 0.1.0
+        protocol: STREAMABLE
+        capabilities:
+          tool: true
 
 management:
   endpoints:

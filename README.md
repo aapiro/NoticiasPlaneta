@@ -62,6 +62,8 @@ solo es accesible dentro de la red de Compose.
 | POST | `/api/v1/media/presign` | firma una URL de subida directa |
 | PUT | `/api/v1/media/blob/{key}` | recibe el binario (firma HMAC) |
 | POST | `/api/v1/media/commit` | valida, reencodea y registra el activo |
+| GET | `/api/v1/public/search?q=` | búsqueda híbrida pública |
+| POST | `/mcp` | servidor MCP para agentes (exige `X-Api-Key`) |
 | GET | `/actuator/health` | salud |
 
 Todas las rutas de escritura exigen la cabecera `X-Api-Key` (agentes). La URL prefirmada de
@@ -76,3 +78,6 @@ subida lleva su propia firma HMAC y no necesita cabecera.
 | F05 Flujo editorial y auditoría | implementado y probado |
 | F08 Medios | implementado y probado |
 | F09 Seguridad | cadenas y clave de agente; WebAuthn cableado |
+| F10 Búsqueda híbrida | implementado y probado |
+| F03 Enriquecido (DeepSeek) | implementado; requiere `DEEPSEEK_API_KEY` |
+| F12 Servidor MCP | 3 herramientas para agentes, sin herramienta de publicación |

@@ -36,15 +36,15 @@ Estado a 2026-11-06. Orden pensado para que cada fase deje algo desplegable y pr
 - F09 passkeys (spring-security-webauthn) y dos cadenas de seguridad
 - F07 despublicación con prioridad de purga
 
-## Fase 4 — Descubrimiento
+## Fase 4 — Descubrimiento (hecho)
 
-- F03 enriquecido asíncrono (DeepSeek + embeddings locales bge-m3)
-- F10 búsqueda híbrida con RRF
+- ✅ F03 enriquecido asíncrono (DeepSeek; embeddings por Ollama/bge-m3)
+- ✅ F10 búsqueda híbrida con RRF
 - F11 temas y delta "desde tu última visita"
 
-## Fase 5 — Agentes
+## Fase 5 — Agentes (en curso)
 
-- F12 servidor MCP con scopes por perfil y auditoría de `agent_id`
+- 🟡 F12 servidor MCP con 3 herramientas (buscar, leer, crear borrador); sin herramienta de publicación
 - Skills de Hermes y cron de ingesta
 
 ## Deuda asumida y consciente

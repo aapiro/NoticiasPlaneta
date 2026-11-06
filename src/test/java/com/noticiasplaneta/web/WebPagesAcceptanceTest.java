@@ -5,6 +5,9 @@ import com.noticiasplaneta.news.application.port.in.CreateDraftFromItemUseCase;
 import com.noticiasplaneta.news.application.port.in.CreateDraftResult;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
+import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
+import com.noticiasplaneta.news.application.port.in.UnpublishCommand;
+import com.noticiasplaneta.news.domain.UnpublishKind;
 import com.noticiasplaneta.news.domain.Actor;
 import com.noticiasplaneta.news.domain.ArticleOrigin;
 import com.noticiasplaneta.news.domain.ArticleState;
@@ -53,6 +56,9 @@ class WebPagesAcceptanceTest {
     @Autowired
     TransitionArticleUseCase transicion;
 
+    @Autowired
+    UnpublishArticleUseCase unpublish;
+
     private final Actor chief = Actor.human("u-chief", Set.of("CHIEF"), Set.of("economia"));
 
     private String publicar(String titulo, String cuerpo) {
@@ -65,6 +71,13 @@ class WebPagesAcceptanceTest {
             transicion.transition(new TransitionCommand(draft.articleId(), state, chief, null));
         }
         return draft.slug().value();
+    }
+
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
+
+    private String idDe(String slug) {
+        return jdbc.queryForObject("select id::text from article where slug = ?", String.class, slug);
     }
 
     @Test
@@ -85,6 +98,25 @@ class WebPagesAcceptanceTest {
         mvc.perform(get("/economia/" + slug))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Primer párrafo")));
+    }
+
+    @Test
+    @DisplayName("Un artículo retirado devuelve 410 Gone con la nota de retirada")
+    void retirado() throws Exception {
+        String slug = publicar("Noticia que se retira", "Cuerpo que dejará de verse.");
+        String id = idDe(slug);
+
+        unpublish.unpublish(new UnpublishCommand(
+                com.noticiasplaneta.news.domain.ArticleId.of(id),
+                UnpublishKind.RETIRADA,
+                "La fuente principal rectificó y el dato no se sostiene", chief));
+
+        mvc.perform(get("/economia/" + slug))
+                .andExpect(status().isGone())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Artículo retirado")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("rectificó")))
+                .andExpect(content().string(org.hamcrest.Matchers
+                        .not(org.hamcrest.Matchers.containsString("Cuerpo que dejará de verse"))));
     }
 
     @Test

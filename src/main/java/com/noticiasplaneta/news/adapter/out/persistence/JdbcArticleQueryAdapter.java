@@ -47,6 +47,24 @@ class JdbcArticleQueryAdapter implements ArticleQueryRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<com.noticiasplaneta.news.application.port.in.RetiredArticle> findRetiredBySectionAndSlug(
+            String sectionId, String slug) {
+        String sql = """
+                select id, slug, section_id, title, unpublish_reason, unpublished_at
+                from article
+                where state = 'ARCHIVED' and section_id = ? and slug = ?
+                """;
+        return jdbc.query(sql, (rs, n) -> {
+            var ts = rs.getTimestamp("unpublished_at");
+            return new com.noticiasplaneta.news.application.port.in.RetiredArticle(
+                    rs.getString("id"), rs.getString("slug"), rs.getString("section_id"),
+                    rs.getString("title"), rs.getString("unpublish_reason"),
+                    ts == null ? "" : LABEL.format(ts.toInstant()));
+        }, sectionId, slug).stream().findFirst();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<PublishedArticle> findPublishedBySectionAndSlug(String sectionId, String slug) {
         String sql = """
                 select id, slug, section_id, title, correction_note, published_at

@@ -4,6 +4,7 @@ import com.noticiasplaneta.news.application.port.in.ArticleText;
 import com.noticiasplaneta.news.application.port.in.GetPublishedArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.ListPublishedArticlesUseCase;
 import com.noticiasplaneta.news.application.port.in.PublishedArticle;
+import com.noticiasplaneta.news.application.port.in.RetiredArticle;
 import com.noticiasplaneta.news.application.port.out.ArticleQueryRepository;
 import com.noticiasplaneta.news.application.port.out.ArticleRepository;
 import com.noticiasplaneta.news.domain.ArticleId;
@@ -30,6 +31,11 @@ public class ArticleQueryService implements ListPublishedArticlesUseCase, GetPub
     @Override
     public Optional<PublishedArticle> bySectionAndSlug(String sectionId, String slug) {
         return queries.findPublishedBySectionAndSlug(sectionId, slug);
+    }
+
+    @Override
+    public Optional<RetiredArticle> retiredBySectionAndSlug(String sectionId, String slug) {
+        return queries.findRetiredBySectionAndSlug(sectionId, slug);
     }
 
     @Override

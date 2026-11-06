@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page('Artículo retirado — Noticias Planeta', ~{::main})}">
+<body>
+<main>
+    <p class="meta"><span class="seccion" th:text="${retirado.sectionId()}">seccion</span></p>
+    <h1>Artículo retirado</h1>
+
+    <p>
+        Este artículo se publicó y posteriormente se retiró. Noticias Planeta conserva el
+        registro y explica el motivo; el contenido ya no está disponible.
+    </p>
+
+    <p class="correccion" th:if="${retirado.reason() != null}" th:text="${retirado.reason()}">
+        Motivo de la retirada
+    </p>
+
+    <p class="meta" th:if="${retirado.unpublishedLabel() != ''}">
+        Retirado el <time th:text="${retirado.unpublishedLabel()}">fecha</time>
+    </p>
+
+    <p class="vacio">Titular original: «<span th:text="${retirado.title()}"></span>»</p>
+</main>
+</body>
+</html>

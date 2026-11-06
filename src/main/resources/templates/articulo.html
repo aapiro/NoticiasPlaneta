@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(${articulo.title()}, ~{::main})}">
+<body>
+<main>
+    <p class="meta"><span class="seccion" th:text="${articulo.sectionId()}">seccion</span></p>
+    <h1 th:text="${articulo.title()}">Titular</h1>
+    <p class="meta" th:if="${articulo.publishedAt() != null}">
+        <time th:datetime="${articulo.publishedAt()}" th:text="${articulo.publishedLabel()}">fecha</time>
+    </p>
+
+    <p class="correccion" th:if="${articulo.summary() != null}" th:text="${articulo.summary()}">Corrección</p>
+
+    <div th:each="parrafo : ${#strings.arraySplit(texto.body(), '\n')}">
+        <p th:if="${!#strings.isEmpty(parrafo)}" th:text="${parrafo}">Texto</p>
+    </div>
+</main>
+</body>
+</html>

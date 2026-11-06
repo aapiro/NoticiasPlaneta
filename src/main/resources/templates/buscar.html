@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page('Buscar — Noticias Planeta', ~{::main})}">
+<body>
+<main>
+    <h1>Buscar</h1>
+    <form method="get" action="/buscar" role="search">
+        <label for="q" class="vacio">Qué quieres buscar</label>
+        <input id="q" type="search" name="q" th:value="${q}" minlength="2" required>
+        <button type="submit">Buscar</button>
+    </form>
+
+    <p class="vacio" th:if="${q != null and #lists.isEmpty(resultados)}">
+        Sin resultados para «<span th:text="${q}"></span>».
+    </p>
+
+    <article th:each="r : ${resultados}">
+        <h2>
+            <a class="titular" th:href="@{'/' + ${r.sectionId()} + '/' + ${r.slug()}}"
+               th:text="${r.title()}">Titular</a>
+        </h2>
+        <p class="meta"><span class="seccion" th:text="${r.sectionId()}">seccion</span></p>
+    </article>
+</main>
+</body>
+</html>

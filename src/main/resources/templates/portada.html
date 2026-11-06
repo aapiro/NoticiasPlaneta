@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page('Portada — Noticias Planeta', ~{::main})}">
+<body>
+<main>
+    <h1 th:text="${seccion} ?: 'Portada'">Portada</h1>
+    <p class="vacio" th:if="${#lists.isEmpty(articulos)}">Todavía no hay artículos publicados.</p>
+
+    <article th:each="a : ${articulos}">
+        <h2>
+            <a class="titular" th:href="@{'/' + ${a.sectionId()} + '/' + ${a.slug()}}"
+               th:text="${a.title()}">Titular</a>
+        </h2>
+        <p class="meta">
+            <span class="seccion" th:text="${a.sectionId()}">seccion</span>
+            <time th:if="${a.publishedAt() != null}" th:datetime="${a.publishedAt()}"
+                  th:text="${a.publishedLabel()}">fecha</time>
+        </p>
+        <p class="correccion" th:if="${a.summary() != null}" th:text="${a.summary()}">Corrección</p>
+    </article>
+</main>
+</body>
+</html>

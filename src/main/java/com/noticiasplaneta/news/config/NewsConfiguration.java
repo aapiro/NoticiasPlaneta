@@ -3,6 +3,8 @@ package com.noticiasplaneta.news.config;
 import com.noticiasplaneta.news.application.port.in.CreateDraftFromItemUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.GetArticleTextUseCase;
+import com.noticiasplaneta.news.application.port.out.ArticleQueryRepository;
+import com.noticiasplaneta.news.application.service.ArticleQueryService;
 import com.noticiasplaneta.news.application.port.in.StoreArticleEmbeddingUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
 import com.noticiasplaneta.news.application.service.GetArticleTextService;
@@ -28,6 +30,11 @@ class NewsConfiguration {
                                                           EventPublisher events,
                                                           Clock clock) {
         return new CreateDraftService(articles, events, clock);
+    }
+
+    @Bean
+    ArticleQueryService articleQueryService(ArticleQueryRepository queries, ArticleRepository articles) {
+        return new ArticleQueryService(queries, articles);
     }
 
     @Bean

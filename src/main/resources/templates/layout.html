@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:fragment="page(titulo, contenido)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo}">Noticias Planeta</title>
+    <style>
+        :root { color-scheme: light dark; --tinta: #111; --papel: #fff; --tenue: #666; --linea: #ddd; }
+        @media (prefers-color-scheme: dark) {
+            :root { --tinta: #f2f2f2; --papel: #12141a; --tenue: #9aa4b2; --linea: #2a2f3a; }
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--papel); color: var(--tinta);
+               font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        header { border-bottom: 2px solid var(--tinta); padding: 1rem 1.25rem; }
+        .marca { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em;
+                 text-decoration: none; color: var(--tinta); }
+        nav { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .5rem; font-size: .9rem; }
+        nav a { color: var(--tenue); text-decoration: none; }
+        nav a:hover, nav a:focus { color: var(--tinta); text-decoration: underline; }
+        main { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; display: block; }
+        h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 .5rem; }
+        h2 { font-size: 1.25rem; line-height: 1.3; margin: 0 0 .35rem; }
+        article { padding: 1.25rem 0; border-bottom: 1px solid var(--linea); }
+        article:last-child { border-bottom: 0; }
+        a.titular { color: var(--tinta); text-decoration: none; }
+        a.titular:hover, a.titular:focus { text-decoration: underline; }
+        .meta { color: var(--tenue); font-size: .85rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+        .seccion { text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+        .correccion { border-left: 3px solid #b45309; padding: .5rem .75rem; margin: 1rem 0;
+                      background: rgba(180, 83, 9, .08); font-size: .9rem; }
+        form { display: flex; gap: .5rem; margin: 1rem 0 2rem; flex-wrap: wrap; }
+        input[type=search] { flex: 1 1 12rem; padding: .6rem .75rem; font-size: 1rem;
+                             border: 1px solid var(--linea); border-radius: 6px;
+                             background: var(--papel); color: var(--tinta); }
+        button { padding: .6rem 1rem; font-size: 1rem; border-radius: 6px; cursor: pointer;
+                 border: 1px solid var(--tinta); background: var(--tinta); color: var(--papel); }
+        :focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+        footer { border-top: 1px solid var(--linea); color: var(--tenue); font-size: .8rem;
+                 padding: 1.5rem 1.25rem; text-align: center; }
+        .vacio { color: var(--tenue); font-style: italic; }
+    </style>
+</head>
+<body>
+<header>
+    <a class="marca" th:href="@{/}">Noticias Planeta</a>
+    <nav aria-label="Secciones">
+        <a th:href="@{/(seccion='espana')}">España</a>
+        <a th:href="@{/(seccion='economia')}">Economía</a>
+        <a th:href="@{/(seccion='mundo')}">Mundo</a>
+        <a th:href="@{/(seccion='deportes')}">Deportes</a>
+        <a th:href="@{/buscar}">Buscar</a>
+    </nav>
+</header>
+<main th:replace="${contenido}"></main>
+<footer>Noticias Planeta · periodismo hiperlocal</footer>
+</body>
+</html>

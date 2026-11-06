@@ -81,7 +81,10 @@ public class SecurityConfiguration {
     @Bean
     @Order(3)
     SecurityFilterChain webChain(HttpSecurity http, SecurityProperties properties) throws Exception {
-        http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+        http.authorizeHttpRequests(auth -> auth
+                        // el sitio público es de solo lectura; toda escritura va por la API
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .anyRequest().authenticated())
                 .webAuthn(webAuthn -> webAuthn
                         .rpId(properties.rpId())
                         .rpName(properties.rpName())

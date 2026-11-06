@@ -25,6 +25,9 @@ services:
       RP_ID: ${RP_ID:-localhost}
       RP_ORIGIN: ${RP_ORIGIN:-https://localhost}
       MEDIA_ROOT: /data/media
+      OLLAMA_URL: http://ollama:11434
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
     depends_on:
       db:
         condition: service_healthy
@@ -33,6 +36,17 @@ services:
     restart: unless-stopped
     expose:
       - "8080"
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
 
   caddy:
     image: caddy:2-alpine
@@ -49,6 +63,7 @@ services:
 
 volumes:
   db-data:
+  ollama-data:
   media-data:
   caddy-data:
   caddy-config:

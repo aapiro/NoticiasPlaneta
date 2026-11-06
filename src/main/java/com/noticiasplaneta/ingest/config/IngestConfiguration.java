@@ -1,6 +1,7 @@
 package com.noticiasplaneta.ingest.config;
 
 import com.noticiasplaneta.ingest.application.port.in.AddSourceUseCase;
+import com.noticiasplaneta.ingest.application.service.IngestQueriesService;
 import com.noticiasplaneta.ingest.application.port.in.IngestSourceUseCase;
 import com.noticiasplaneta.ingest.application.port.out.ExecutionLock;
 import com.noticiasplaneta.ingest.application.port.out.FeedFetcher;
@@ -36,4 +37,12 @@ class IngestConfiguration {
     AddSourceUseCase addSourceUseCase(SourceRepository sources) {
         return new AddSourceService(sources);
     }
+
+    @Bean
+    IngestQueriesService ingestQueriesService(SourceRepository sources,
+                                              IngestItemRepository items,
+                                              IngestSourceUseCase ingestSource) {
+        return new IngestQueriesService(sources, items, ingestSource);
+    }
+
 }

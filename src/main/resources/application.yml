@@ -19,6 +19,11 @@ spring:
         protocol: STREAMABLE
         capabilities:
           tool: true
+    ollama:
+      base-url: ${OLLAMA_URL:http://localhost:11434}
+      embedding:
+        options:
+          model: ${EMBEDDING_MODEL:bge-m3}
 
 management:
   endpoints:
@@ -41,3 +46,11 @@ ai:
     daily-micros: ${AI_DAILY_BUDGET_MICROS:5000000}
   worker:
     delay-ms: 30000
+
+ingest:
+  scheduler:
+    enabled: true
+    delay-ms: 900000
+
+news:
+  default-section: general

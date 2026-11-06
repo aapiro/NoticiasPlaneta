@@ -3,6 +3,7 @@ package com.noticiasplaneta.ingest.support;
 import com.noticiasplaneta.ingest.application.port.out.IngestItemRepository;
 import com.noticiasplaneta.ingest.domain.ContentHash;
 import com.noticiasplaneta.ingest.domain.IngestItem;
+import com.noticiasplaneta.ingest.domain.IngestItemId;
 import com.noticiasplaneta.ingest.domain.SourceId;
 
 import java.util.ArrayList;
@@ -32,6 +33,11 @@ public class InMemoryItems implements IngestItemRepository {
     @Override
     public boolean existsBySourceAndContentHash(SourceId sourceId, ContentHash contentHash) {
         return data.stream().anyMatch(i -> i.sourceId().equals(sourceId) && i.contentHash().equals(contentHash));
+    }
+
+    @Override
+    public java.util.Optional<IngestItem> findById(IngestItemId id) {
+        return data.stream().filter(i -> i.id().equals(id)).findFirst();
     }
 
     @Override

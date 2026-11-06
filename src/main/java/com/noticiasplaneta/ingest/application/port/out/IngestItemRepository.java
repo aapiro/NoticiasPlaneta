@@ -17,4 +17,7 @@ public interface IngestItemRepository {
     boolean existsBySourceAndContentHash(SourceId sourceId, ContentHash contentHash);
 
     long count();
+
+    java.util.Optional<com.noticiasplaneta.ingest.domain.IngestItem> findById(
+            com.noticiasplaneta.ingest.domain.IngestItemId id);
 }

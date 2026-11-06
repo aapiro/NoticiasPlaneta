@@ -1,0 +1,7 @@
+# Configuración solo para tests: los programadores periódicos no deben dispararse.
+ingest:
+  scheduler:
+    enabled: false
+ai:
+  worker:
+    delay-ms: 3600000

@@ -46,6 +46,13 @@ class IngestItemRepositoryAdapter implements IngestItemRepository {
 
     @Override
     @Transactional(readOnly = true)
+    public java.util.Optional<com.noticiasplaneta.ingest.domain.IngestItem> findById(
+            com.noticiasplaneta.ingest.domain.IngestItemId id) {
+        return jpa.findById(id.value()).map(this::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long count() {
         return jpa.count();
     }

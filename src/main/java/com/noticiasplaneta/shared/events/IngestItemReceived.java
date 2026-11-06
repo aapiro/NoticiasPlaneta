@@ -1,9 +1,8 @@
-package com.noticiasplaneta.ingest.application.event;
+package com.noticiasplaneta.shared.events;
 
 import java.time.Instant;
 import java.util.UUID;
 
-/** Evento de dominio publicado cuando entra un item nuevo. Versión 1. */
 public record IngestItemReceived(
         UUID itemId,
         UUID sourceId,

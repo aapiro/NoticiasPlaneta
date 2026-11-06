@@ -1,6 +1,6 @@
 package com.noticiasplaneta.ingest.application.service;
 
-import com.noticiasplaneta.ingest.application.event.IngestItemReceived;
+import com.noticiasplaneta.shared.events.IngestItemReceived;
 import com.noticiasplaneta.ingest.application.port.in.IngestReport;
 import com.noticiasplaneta.ingest.application.port.in.IngestSourceUseCase;
 import com.noticiasplaneta.ingest.application.port.out.ExecutionLock;

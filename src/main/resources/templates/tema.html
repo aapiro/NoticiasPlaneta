@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(${tema.title()}, ~{::main})}">
+<body>
+<main>
+    <p class="meta"><span class="seccion">Tema</span></p>
+    <h1 th:text="${tema.title()}">Tema</h1>
+    <p class="vacio" th:if="${tema.summary() != null}" th:text="${tema.summary()}">Resumen</p>
+
+    <section th:if="${tema.deltaSince() != null}" aria-labelledby="delta">
+        <h2 id="delta">Desde tu última visita</h2>
+        <p class="vacio" th:if="${#lists.isEmpty(tema.delta())}">
+            Sin novedades desde tu última visita.
+        </p>
+        <article th:each="d : ${tema.delta()}">
+            <h3>
+                <a class="titular" th:href="@{'/' + ${d.sectionId()} + '/' + ${d.slug()}}"
+                   th:text="${d.title()}">Titular</a>
+            </h3>
+            <p class="meta"><time th:datetime="${d.publishedAt()}"
+                                  th:text="${d.publishedLabel()}">fecha</time></p>
+        </article>
+    </section>
+
+    <h2>Línea temporal</h2>
+    <p class="vacio" th:if="${#lists.isEmpty(tema.entries())}">Todavía no hay artículos en este tema.</p>
+    <article th:each="e : ${tema.entries()}">
+        <h3>
+            <a class="titular" th:href="@{'/' + ${e.sectionId()} + '/' + ${e.slug()}}"
+               th:text="${e.title()}">Titular</a>
+        </h3>
+        <p class="meta">
+            <span class="seccion" th:text="${e.sectionId()}">seccion</span>
+            <time th:datetime="${e.publishedAt()}" th:text="${e.publishedLabel()}">fecha</time>
+        </p>
+    </article>
+</main>
+</body>
+</html>

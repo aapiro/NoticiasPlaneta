@@ -44,6 +44,16 @@ Todo el sistema corre en máquinas propias, sin dependencias externas obligatori
   y un chequeo externo de disponibilidad (Uptime Kuma o un cron de Hermes que avise).
 - Riesgo: si el VPS cae, no hay CDN que sirva caché. Se acepta en fase 1.
 
-## Qué queda pendiente de decidir
-- Si el servidor es el VPS actual de Hostinger o una máquina en casa.
-- Destino de backups.
+## Hardware decidido (2026-11-06)
+VPS con **32 GB de RAM**. Sobra para todo el stack y permite Ollama con `bge-m3`
+(~2 GB) sin sacrificar PostgreSQL ni la JVM. Reparto previsto:
+
+| Componente | RAM estimada |
+|---|---|
+| PostgreSQL + pgvector | 4 GB (`shared_buffers` 1 GB) |
+| JVM de la aplicación | 2–3 GB (`MaxRAMPercentage=75` del contenedor) |
+| Ollama + bge-m3 | 2–3 GB |
+| Caddy + sistema | < 1 GB |
+| **Margen** | > 20 GB |
+
+Queda pendiente el destino de backups.

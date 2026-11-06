@@ -1,0 +1,17 @@
+# En local sirve en http://localhost y con TLS interno para probar HTTPS.
+# En producción: sustituye "localhost" por noticiasplaneta.com y Caddy pide el
+# certificado de Let's Encrypt solo (hace falta DNS apuntando al servidor y 80/443 abiertos).
+
+localhost {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
+
+	reverse_proxy app:8080
+}

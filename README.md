@@ -41,8 +41,30 @@ src/main/java/com/noticiasplaneta/
 
 Las fronteras se verifican con ArchUnit (`HexagonalArchitectureTest`).
 
+## Arrancar
+
+```bash
+docker compose up -d --build      # app + PostgreSQL/pgvector + Caddy
+./scripts/smoke.sh https://localhost
+```
+
+La app queda detrás de Caddy en `https://localhost` (certificado local) y el puerto 8080
+solo es accesible dentro de la red de Compose.
+
+## API
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| POST | `/api/v1/sources` | registra una fuente RSS/Atom |
+| POST | `/api/v1/sources/{id}/ingest` | ejecuta la ingesta de esa fuente |
+| POST | `/api/v1/articles` | crea un borrador |
+| POST | `/api/v1/articles/{id}/transitions` | cambia de estado (con reglas de rol) |
+| GET | `/actuator/health` | salud |
+
 ## Estado
 
 | Flujo | Estado |
 |---|---|
 | F01 Ingesta de fuentes | implementado y probado |
+| F02 Borradores desde ingesta | implementado y probado |
+| F05 Flujo editorial y auditoría | implementado y probado |

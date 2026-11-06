@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: noticiasplaneta
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/noticias}
+    username: ${DB_USER:noticias}
+    password: ${DB_PASSWORD:noticias}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

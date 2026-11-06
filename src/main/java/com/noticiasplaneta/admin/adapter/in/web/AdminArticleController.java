@@ -93,10 +93,19 @@ class AdminArticleController {
         mav.addObject("auditoria", bandeja.auditOf(id));
         // RN2: las transiciones posibles las dicta el dominio, no la plantilla
         mav.addObject("transiciones", bandeja.transitionsFrom(estado));
+        mav.addObject("etiquetas", ETIQUETAS);
         mav.addObject("publicado", "PUBLISHED".equals(estado));
         mav.addObject("tiposRetirada", bandeja.retirementKinds());
         return mav;
     }
+
+    /** El dominio devuelve nombres técnicos; aquí se traducen para quien escribe. */
+    private static final java.util.Map<String, String> ETIQUETAS = java.util.Map.of(
+            "IN_REVIEW", "Enviar a revisión",
+            "APPROVED", "Aprobar",
+            "SCHEDULED", "Programar",
+            "PUBLISHED", "Publicar",
+            "ARCHIVED", "Archivar");
 
     private static HttpStatus statusFor(DomainException e) {
         String code = e.code() == null ? "" : e.code();

@@ -26,7 +26,7 @@
         <form th:each="t : ${transiciones}" class="inline" method="post"
               th:action="@{/admin/articulos/{id}/transicion(id=${texto.articleId()})}">
             <input type="hidden" name="destino" th:value="${t}">
-            <button type="submit" th:text="${t}">PUBLICAR</button>
+            <button type="submit" th:text="${etiquetas.get(t) ?: t}">Publicar</button>
         </form>
         <p class="meta" th:if="${#lists.isEmpty(transiciones)}">
             No hay transiciones disponibles desde este estado.

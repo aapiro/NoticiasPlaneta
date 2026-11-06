@@ -50,4 +50,55 @@ class ArticleTest {
         assertThat(article.state()).isEqualTo(ArticleState.PUBLISHED);
         assertThat(article.publishedAt()).isEqualTo(NOW);
     }
+
+    // ---------- F13: edición ----------
+
+    @Test
+    @DisplayName("Editar cambia titular y cuerpo y sube la versión")
+    void editar() {
+        Article article = Article.draft("es", "economia", ArticleOrigin.MANUAL, null,
+                Slug.fromTitle("Titular viejo"), "Titular viejo", "Cuerpo viejo", NOW);
+
+        article.edit("Titular nuevo", "Cuerpo nuevo", 1);
+
+        assertThat(article.title()).isEqualTo("Titular nuevo");
+        assertThat(article.body()).isEqualTo("Cuerpo nuevo");
+        assertThat(article.revisionCount()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Editar el titular no mueve la URL")
+    void editarNoCambiaSlug() {
+        Article article = Article.draft("es", "economia", ArticleOrigin.MANUAL, null,
+                Slug.fromTitle("Titular original"), "Titular original", "Cuerpo", NOW);
+        String slugAntes = article.slug().value();
+
+        article.edit("Otro titular completamente distinto", "Cuerpo", 1);
+
+        assertThat(article.slug().value()).isEqualTo(slugAntes);
+    }
+
+    @Test
+    @DisplayName("Una versión vieja no pisa el trabajo de otra persona")
+    void conflictoDeVersion() {
+        Article article = Article.draft("es", "economia", ArticleOrigin.MANUAL, null,
+                Slug.fromTitle("Titular"), "Titular", "Cuerpo", NOW);
+        article.edit("Primera edición", "Cuerpo 1", 1);
+
+        assertThatThrownBy(() -> article.edit("Llego tarde", "Cuerpo 2", 1))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("ha cambiado");
+        assertThat(article.title()).isEqualTo("Primera edición");
+    }
+
+    @Test
+    @DisplayName("Sin cuerpo no se guarda la edición")
+    void editarSinCuerpo() {
+        Article article = Article.draft("es", "economia", ArticleOrigin.MANUAL, null,
+                Slug.fromTitle("Titular"), "Titular", "Cuerpo", NOW);
+
+        assertThatThrownBy(() -> article.edit("Titular válido", "   ", 1))
+                .isInstanceOf(DomainException.class);
+        assertThat(article.body()).isEqualTo("Cuerpo");
+    }
 }

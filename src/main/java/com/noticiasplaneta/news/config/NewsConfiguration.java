@@ -6,7 +6,9 @@ import com.noticiasplaneta.news.application.port.in.GetArticleTextUseCase;
 import com.noticiasplaneta.news.application.port.in.ListArticlesUseCase;
 import com.noticiasplaneta.news.application.port.out.ArticleAdminQueryRepository;
 import com.noticiasplaneta.news.application.port.out.ArticleQueryRepository;
+import com.noticiasplaneta.news.application.port.in.EditArticleUseCase;
 import com.noticiasplaneta.news.application.service.ArticleAdminQueryService;
+import com.noticiasplaneta.news.application.service.EditArticleService;
 import com.noticiasplaneta.news.application.service.ArticleQueryService;
 import com.noticiasplaneta.news.application.port.in.StoreArticleEmbeddingUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
@@ -33,6 +35,12 @@ class NewsConfiguration {
                                                           EventPublisher events,
                                                           Clock clock) {
         return new CreateDraftService(articles, events, clock);
+    }
+
+    @Bean
+    EditArticleUseCase editArticleUseCase(ArticleRepository articles, AuditPort audit,
+                                          CachePurgePort cache, SearchIndexPort search, Clock clock) {
+        return new EditArticleService(articles, audit, cache, search, clock);
     }
 
     @Bean

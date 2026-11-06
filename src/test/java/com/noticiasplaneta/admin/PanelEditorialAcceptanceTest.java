@@ -188,14 +188,14 @@ class PanelEditorialAcceptanceTest {
     }
 
     @Test
-    @DisplayName("El editor de un artículo publicado avisa de que se crea revisión")
+    @DisplayName("El editor de un artículo publicado avisa de que el cambio se ve al instante")
     void avisoRevision() throws Exception {
         String id = borrador("Noticia ya publicada que se va a revisar");
         publicar(id);
 
         mvc.perform(get("/admin/articulos/" + id).with(conSesion(sesion("jefa@noticiasplaneta.com"))))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("crea una revisión nueva")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("se ve al instante")));
     }
 
     @Test
@@ -240,5 +240,88 @@ class PanelEditorialAcceptanceTest {
                         .with(conSesion(sesion("jefa@noticiasplaneta.com")))
                         .param("destino", "IN_REVIEW"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Editar el titular y el cuerpo desde el panel queda auditado")
+    void edita() throws Exception {
+        String id = borrador("Titular viejo que se va a corregir");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/editar").with(conSesion(session)).with(csrf())
+                        .param("title", "Titular nuevo, ya corregido")
+                        .param("body", "Cuerpo reescrito por la redactora jefa.")
+                        .param("revision", "1"))
+                .andExpect(status().is3xxRedirection());
+
+        var fila = jdbc.queryForMap("select title, body, revision_count from article where id = ?::uuid", id);
+        org.assertj.core.api.Assertions.assertThat(fila.get("title")).isEqualTo("Titular nuevo, ya corregido");
+        org.assertj.core.api.Assertions.assertThat(fila.get("body")).isEqualTo("Cuerpo reescrito por la redactora jefa.");
+        org.assertj.core.api.Assertions.assertThat(fila.get("revision_count")).isEqualTo(2);
+
+        String auditados = jdbc.queryForObject(
+                "select count(*)::text from audit_log where entity_id = ? and action = 'ARTICLE_EDITED'",
+                String.class, id);
+        org.assertj.core.api.Assertions.assertThat(auditados).isEqualTo("1");
+    }
+
+    @Test
+    @DisplayName("Editar con una versión vieja se rechaza con 409 y no pisa el texto")
+    void conflictoDeVersion() throws Exception {
+        String id = borrador("Noticia que dos personas editan a la vez");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        // primera edición: sube la versión a 2
+        mvc.perform(post("/admin/articulos/" + id + "/editar").with(conSesion(session)).with(csrf())
+                        .param("title", "Primera edición")
+                        .param("body", "Texto de la primera edición.")
+                        .param("revision", "1"))
+                .andExpect(status().is3xxRedirection());
+
+        // segunda edición con la versión vieja: es la otra pestaña que se quedó atrás
+        mvc.perform(post("/admin/articulos/" + id + "/editar").with(conSesion(session)).with(csrf())
+                        .param("title", "Segunda edición que llega tarde")
+                        .param("body", "Texto de la segunda edición.")
+                        .param("revision", "1"))
+                .andExpect(status().isConflict());
+
+        String titulo = jdbc.queryForObject("select title from article where id = ?::uuid", String.class, id);
+        org.assertj.core.api.Assertions.assertThat(titulo).isEqualTo("Primera edición");
+    }
+
+    @Test
+    @DisplayName("Editar sin cuerpo se rechaza y no guarda nada")
+    void editaSinCuerpo() throws Exception {
+        String id = borrador("Noticia a la que se le borra el cuerpo");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/editar").with(conSesion(session)).with(csrf())
+                        .param("title", "Titular válido")
+                        .param("body", "   ")
+                        .param("revision", "1"))
+                .andExpect(status().isUnprocessableEntity());
+
+        String titulo = jdbc.queryForObject("select title from article where id = ?::uuid", String.class, id);
+        org.assertj.core.api.Assertions.assertThat(titulo).isEqualTo("Noticia a la que se le borra el cuerpo");
+    }
+
+    @Test
+    @DisplayName("Editar un artículo publicado refresca lo que ve el lector")
+    void editaPublicado() throws Exception {
+        String id = borrador("Noticia publicada cuyo titular se reescribe");
+        publicar(id);
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/editar").with(conSesion(session)).with(csrf())
+                        .param("title", "Titular reescrito después de publicar")
+                        .param("body", "Cuerpo actualizado con el dato nuevo.")
+                        .param("revision", "1"))
+                .andExpect(status().is3xxRedirection());
+
+        String slug = jdbc.queryForObject("select slug from article where id = ?::uuid", String.class, id);
+        mvc.perform(get("/economia/" + slug))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers
+                        .containsString("Titular reescrito después de publicar")));
     }
 }

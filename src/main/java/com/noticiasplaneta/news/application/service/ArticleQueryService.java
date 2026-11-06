@@ -43,6 +43,6 @@ public class ArticleQueryService implements ListPublishedArticlesUseCase, GetPub
         return articles.findById(ArticleId.of(id))
                 .filter(a -> a.state() == com.noticiasplaneta.news.domain.ArticleState.PUBLISHED)
                 .map(a -> new ArticleText(a.id().value(), a.title(), a.body(), a.sectionId(),
-                        a.state().name(), a.origin().name()));
+                        a.state().name(), a.origin().name(), a.revisionCount()));
     }
 }

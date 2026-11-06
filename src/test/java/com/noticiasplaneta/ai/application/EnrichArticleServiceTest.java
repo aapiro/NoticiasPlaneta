@@ -47,7 +47,7 @@ class EnrichArticleServiceTest {
         store = new RecordingEmbeddingStore();
 
         GetArticleTextUseCase articleText = id -> Optional.of(
-                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST"));
+                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST", 1));
 
         service = new EnrichArticleService(jobs, enrichments, new FakeEnricher(), embeddings,
                 budget, articleText, store);
@@ -71,7 +71,7 @@ class EnrichArticleServiceTest {
     void noTocaElTexto() {
         FakeEnricher enricher = new FakeEnricher();
         GetArticleTextUseCase articleText = id -> Optional.of(
-                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST"));
+                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST", 1));
         service = new EnrichArticleService(jobs, enrichments, enricher, embeddings, budget,
                 articleText, store);
 
@@ -88,7 +88,7 @@ class EnrichArticleServiceTest {
         List<EnrichmentPort.Entity> filtradas = EnrichArticleService.dropInvented(
                 List.of(new EnrichmentPort.Entity("Pedro Sánchez", "PERSON"),
                         new EnrichmentPort.Entity("Mariano Rajoy", "PERSON")),
-                new ArticleText(ARTICLE, TITLE, BODY, "economia", "DRAFT", "INGEST"));
+                new ArticleText(ARTICLE, TITLE, BODY, "economia", "DRAFT", "INGEST", 1));
 
         assertThat(filtradas).extracting(EnrichmentPort.Entity::name).containsExactly("Pedro Sánchez");
     }
@@ -98,7 +98,7 @@ class EnrichArticleServiceTest {
     void sinPresupuesto() {
         budget = new FakeBudget(false);
         GetArticleTextUseCase articleText = id -> Optional.of(
-                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST"));
+                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST", 1));
         FakeEnricher enricher = new FakeEnricher();
         service = new EnrichArticleService(jobs, enrichments, enricher, embeddings, budget,
                 articleText, store);
@@ -115,7 +115,7 @@ class EnrichArticleServiceTest {
     @DisplayName("Si el modelo falla, el job se reintenta y no se guarda nada")
     void falloDelModelo() {
         GetArticleTextUseCase articleText = id -> Optional.of(
-                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST"));
+                new ArticleText(id, TITLE, BODY, "economia", "DRAFT", "INGEST", 1));
         EnrichmentPort roto = new EnrichmentPort() {
             @Override
             public EnrichmentResult enrich(String title, String body) {

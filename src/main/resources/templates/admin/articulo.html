@@ -12,14 +12,31 @@
     </p>
 
     <p class="aviso" th:if="${error != null}" th:text="${error}">Error</p>
+    <p class="aviso" th:if="${guardado}">Guardado. La versión <span th:text="${texto.revision()}"></span>
+        queda registrada en la auditoría.</p>
 
     <p class="aviso" th:if="${publicado}">
-        Este artículo está publicado. Cualquier cambio crea una revisión nueva y queda auditado;
-        el texto que ven los lectores no cambia hasta que se vuelva a publicar.
+        Este artículo está <strong>publicado</strong>: lo que guardes se ve al instante y queda
+        auditado. Para retirarlo o dejar una nota de corrección visible, usa el bloque de abajo.
     </p>
 
-    <h2>Cuerpo</h2>
-    <div class="cuerpo" th:text="${texto.body()}">Cuerpo</div>
+    <h2>Texto</h2>
+    <form method="post" th:action="@{/admin/articulos/{id}/editar(id=${texto.articleId()})}">
+        <input type="hidden" name="revision" th:value="${texto.revision()}">
+        <div class="campo">
+            <label for="title">Titular</label>
+            <input id="title" type="text" name="title" th:value="${texto.title()}" required>
+        </div>
+        <div class="campo">
+            <label for="body">Cuerpo</label>
+            <textarea id="body" name="body" required th:text="${texto.body()}"></textarea>
+        </div>
+        <div class="acciones">
+            <button type="submit">Guardar cambios</button>
+            <span class="meta" style="align-self:center">versión <span th:text="${texto.revision()}"></span>
+                · cambiar el titular no cambia la URL</span>
+        </div>
+    </form>
 
     <h2>Acciones</h2>
     <div class="acciones">

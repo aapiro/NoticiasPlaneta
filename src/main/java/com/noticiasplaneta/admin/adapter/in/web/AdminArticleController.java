@@ -1,5 +1,7 @@
 package com.noticiasplaneta.admin.adapter.in.web;
 
+import com.noticiasplaneta.news.application.port.in.EditArticleCommand;
+import com.noticiasplaneta.news.application.port.in.EditArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.GetArticleTextUseCase;
 import com.noticiasplaneta.news.application.port.in.ListArticlesUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
@@ -33,18 +35,39 @@ class AdminArticleController {
     private final ListArticlesUseCase bandeja;
     private final TransitionArticleUseCase transition;
     private final UnpublishArticleUseCase unpublish;
+    private final EditArticleUseCase editArticle;
 
     AdminArticleController(GetArticleTextUseCase articleText, ListArticlesUseCase bandeja,
-                           TransitionArticleUseCase transition, UnpublishArticleUseCase unpublish) {
+                           TransitionArticleUseCase transition, UnpublishArticleUseCase unpublish,
+                           EditArticleUseCase editArticle) {
         this.articleText = articleText;
         this.bandeja = bandeja;
         this.transition = transition;
         this.unpublish = unpublish;
+        this.editArticle = editArticle;
     }
 
     @GetMapping("/admin/articulos/{id}")
-    ModelAndView editor(@PathVariable String id) {
-        return render(id, null, null);
+    ModelAndView editor(@PathVariable String id,
+                        @RequestParam(required = false) String guardado) {
+        ModelAndView mav = render(id, null, null);
+        mav.addObject("guardado", guardado != null);
+        return mav;
+    }
+
+    @PostMapping("/admin/articulos/{id}/editar")
+    ModelAndView editar(@PathVariable String id,
+                        @RequestParam String title,
+                        @RequestParam String body,
+                        @RequestParam int revision,
+                        Authentication authentication) {
+        try {
+            editArticle.edit(new EditArticleCommand(id, title, body, revision,
+                    AdminActor.from(authentication)));
+            return new ModelAndView("redirect:/admin/articulos/" + id + "?guardado=1");
+        } catch (DomainException e) {
+            return render(id, statusFor(e), e.getMessage());
+        }
     }
 
     @PostMapping("/admin/articulos/{id}/transicion")
@@ -112,8 +135,11 @@ class AdminArticleController {
         if (code.contains("FORBIDDEN") || code.contains("CANNOT_PUBLISH") || code.contains("NOT_ALLOWED")) {
             return HttpStatus.FORBIDDEN;
         }
-        if (code.contains("REASON") || code.contains("MOTIVO")) {
+        if (code.contains("REASON") || code.contains("MOTIVO") || code.contains("BODY_REQUIRED")) {
             return HttpStatus.UNPROCESSABLE_ENTITY;
+        }
+        if (code.contains("CONCURRENT_EDIT")) {
+            return HttpStatus.CONFLICT;
         }
         return HttpStatus.BAD_REQUEST;
     }

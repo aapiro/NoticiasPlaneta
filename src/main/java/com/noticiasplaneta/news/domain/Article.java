@@ -125,6 +125,32 @@ public final class Article {
         this.revisionCount++;
     }
 
+    /**
+     * Edita titular y cuerpo (F13).
+     *
+     * <p>El slug NO cambia nunca: es la URL canónica (ADR-001). Cambiar el titular no mueve
+     * la noticia de sitio ni rompe los enlaces entrantes.
+     *
+     * @param expectedRevision versión que el editor tenía delante; si no coincide, otra persona
+     *                         guardó antes y se rechaza en vez de pisar su trabajo
+     */
+    public void edit(String newTitle, String newBody, int expectedRevision) {
+        if (this.revisionCount != expectedRevision) {
+            throw new DomainException("CONCURRENT_EDIT",
+                    "El artículo ha cambiado mientras lo editabas (versión %d, esperabas %d)"
+                            .formatted(this.revisionCount, expectedRevision));
+        }
+        if (newTitle == null || newTitle.isBlank()) {
+            throw new DomainException("ARTICLE_TITLE_REQUIRED", "El artículo necesita título");
+        }
+        if (newBody == null || newBody.isBlank()) {
+            throw new DomainException("ARTICLE_BODY_REQUIRED", "El artículo necesita cuerpo");
+        }
+        this.title = newTitle.trim();
+        this.body = newBody.trim();
+        this.revisionCount++;
+    }
+
     public void assignSlug(Slug slug) {
         this.slug = Objects.requireNonNull(slug, "slug");
     }

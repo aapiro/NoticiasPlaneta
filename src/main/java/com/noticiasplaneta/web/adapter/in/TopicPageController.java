@@ -25,7 +25,7 @@ class TopicPageController {
         this.topics = topics;
     }
 
-    @GetMapping("/tema/{slug}")
+    @GetMapping("/temas/{slug}")
     String tema(@PathVariable String slug,
                 @RequestParam(name = "desde", required = false) String desde,
                 Model model) {

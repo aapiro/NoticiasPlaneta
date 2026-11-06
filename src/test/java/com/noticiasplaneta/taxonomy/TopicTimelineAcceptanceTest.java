@@ -94,7 +94,7 @@ class TopicTimelineAcceptanceTest {
     void lineaTemporal() throws Exception {
         publicarEnTema("La cuenca del Duero entra en alerta");
 
-        mvc.perform(get("/tema/" + TOPIC_SLUG))
+        mvc.perform(get("/temas/" + TOPIC_SLUG))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("La cuenca del Duero entra en alerta")));
     }
@@ -104,7 +104,7 @@ class TopicTimelineAcceptanceTest {
     void sinFecha() throws Exception {
         publicarEnTema("Noticia de prueba del tema");
 
-        String html = mvc.perform(get("/tema/" + TOPIC_SLUG))
+        String html = mvc.perform(get("/temas/" + TOPIC_SLUG))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -118,7 +118,7 @@ class TopicTimelineAcceptanceTest {
 
         String desde = Instant.now().minusSeconds(3600).toString();
 
-        mvc.perform(get("/tema/" + TOPIC_SLUG).param("desde", desde))
+        mvc.perform(get("/temas/" + TOPIC_SLUG).param("desde", desde))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Desde tu última visita")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Publicada después de tu visita")));
@@ -131,7 +131,7 @@ class TopicTimelineAcceptanceTest {
 
         String desde = Instant.now().plusSeconds(3600).toString();
 
-        String html = mvc.perform(get("/tema/" + TOPIC_SLUG).param("desde", desde))
+        String html = mvc.perform(get("/temas/" + TOPIC_SLUG).param("desde", desde))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 

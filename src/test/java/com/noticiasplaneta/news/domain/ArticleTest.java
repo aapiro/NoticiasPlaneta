@@ -18,7 +18,7 @@ class ArticleTest {
     @DisplayName("Un artículo nace siempre en DRAFT")
     void naceEnDraft() {
         Article article = Article.draft("es", "economia", ArticleOrigin.INGEST, "item-1",
-                Slug.fromTitle("Titular"), "Titular", NOW);
+                Slug.fromTitle("Titular"), "Titular", "Cuerpo de prueba", NOW);
 
         assertThat(article.state()).isEqualTo(ArticleState.DRAFT);
         assertThat(article.revisionCount()).isEqualTo(1);
@@ -29,7 +29,7 @@ class ArticleTest {
     @DisplayName("Sin título no hay artículo")
     void sinTitulo() {
         assertThatThrownBy(() -> Article.draft("es", "economia", ArticleOrigin.INGEST, null,
-                Slug.fromTitle("x"), "  ", NOW))
+                Slug.fromTitle("x"), "  ", "Cuerpo de prueba", NOW))
                 .isInstanceOf(DomainException.class);
     }
 
@@ -37,7 +37,7 @@ class ArticleTest {
     @DisplayName("Al publicar se fija la fecha de publicación")
     void publicacionFijaFecha() {
         Article article = Article.draft("es", "economia", ArticleOrigin.MANUAL, null,
-                Slug.fromTitle("Titular"), "Titular", NOW);
+                Slug.fromTitle("Titular"), "Titular", "Cuerpo de prueba", NOW);
         Actor chief = Actor.human("u2", java.util.Set.of("CHIEF"), java.util.Set.of("economia"));
 
         article.transitionTo(ArticleState.IN_REVIEW, chief, NOW);

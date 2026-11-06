@@ -2,7 +2,7 @@ package com.noticiasplaneta.news.application;
 
 import com.noticiasplaneta.ingest.support.InMemoryEventPublisher;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
-import com.noticiasplaneta.news.application.service.ArticleStateChanged;
+import com.noticiasplaneta.shared.events.ArticleStateChanged;
 import com.noticiasplaneta.news.application.service.TransitionArticleService;
 import com.noticiasplaneta.news.domain.Actor;
 import com.noticiasplaneta.news.domain.Article;
@@ -47,7 +47,7 @@ class TransitionArticleServiceTest {
         events = new InMemoryEventPublisher();
         service = new TransitionArticleService(articles, audit, events, Clock.fixed(NOW, ZoneOffset.UTC));
         article = articles.save(Article.draft("es", ECONOMIA, ArticleOrigin.MANUAL, null,
-                Slug.fromTitle("Reforma fiscal"), "Reforma fiscal", NOW));
+                Slug.fromTitle("Reforma fiscal"), "Reforma fiscal", "Cuerpo de prueba", NOW));
     }
 
     @Test

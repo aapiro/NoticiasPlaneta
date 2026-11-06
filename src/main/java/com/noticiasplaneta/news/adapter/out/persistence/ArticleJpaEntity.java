@@ -38,6 +38,9 @@ class ArticleJpaEntity {
     @Column(nullable = false)
     String title;
 
+    @Column(nullable = false)
+    String body;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     ArticleState state;

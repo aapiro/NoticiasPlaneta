@@ -41,6 +41,11 @@ public class InMemoryArticles implements ArticleRepository {
     }
 
     @Override
+    public void saveEmbedding(ArticleId id, float[] embedding) {
+        // no-op en memoria
+    }
+
+    @Override
     public long count() {
         return data.size();
     }

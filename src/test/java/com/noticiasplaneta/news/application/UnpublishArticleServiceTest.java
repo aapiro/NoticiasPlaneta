@@ -56,7 +56,7 @@ class UnpublishArticleServiceTest {
                 Clock.fixed(NOW, ZoneOffset.UTC));
 
         publishedArticle = Article.draft("es", ECONOMIA, ArticleOrigin.MANUAL, null,
-                Slug.fromTitle("Reforma fiscal"), "Reforma fiscal", NOW);
+                Slug.fromTitle("Reforma fiscal"), "Reforma fiscal", "Cuerpo de prueba", NOW);
         publishedArticle.transitionTo(ArticleState.IN_REVIEW, chief, NOW);
         publishedArticle.transitionTo(ArticleState.APPROVED, chief, NOW);
         publishedArticle.transitionTo(ArticleState.SCHEDULED, chief, NOW);

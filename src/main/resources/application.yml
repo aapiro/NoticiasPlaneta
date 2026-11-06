@@ -25,3 +25,11 @@ security:
   rp-name: Noticias Planeta
   allowed-origins:
     - ${RP_ORIGIN:https://localhost}
+
+ai:
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}
+  budget:
+    daily-micros: ${AI_DAILY_BUDGET_MICROS:5000000}
+  worker:
+    delay-ms: 30000

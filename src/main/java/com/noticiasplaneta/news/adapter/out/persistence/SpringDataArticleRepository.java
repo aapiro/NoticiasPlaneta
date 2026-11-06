@@ -12,4 +12,11 @@ interface SpringDataArticleRepository extends JpaRepository<ArticleJpaEntity, UU
     Optional<ArticleJpaEntity> findByIngestItemId(String ingestItemId);
 
     boolean existsByIngestItemId(String ingestItemId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query(
+            value = "update article set embedding = cast(:embedding as vector) where id = :id",
+            nativeQuery = true)
+    void updateEmbedding(@org.springframework.data.repository.query.Param("id") java.util.UUID id,
+                         @org.springframework.data.repository.query.Param("embedding") String embedding);
 }

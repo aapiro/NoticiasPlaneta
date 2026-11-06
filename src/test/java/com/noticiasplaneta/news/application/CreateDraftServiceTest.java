@@ -3,7 +3,7 @@ package com.noticiasplaneta.news.application;
 import com.noticiasplaneta.ingest.support.InMemoryEventPublisher;
 import com.noticiasplaneta.news.application.port.in.CreateDraftCommand;
 import com.noticiasplaneta.news.application.port.in.CreateDraftResult;
-import com.noticiasplaneta.news.application.service.ArticleDrafted;
+import com.noticiasplaneta.shared.events.ArticleDrafted;
 import com.noticiasplaneta.news.application.service.CreateDraftService;
 import com.noticiasplaneta.news.domain.Article;
 import com.noticiasplaneta.news.domain.ArticleOrigin;

@@ -20,6 +20,7 @@ public final class Article {
     private final String ingestItemId;
     private Slug slug;
     private String title;
+    private String body;
     private ArticleState state;
     private int revisionCount;
     private Instant publishedAt;
@@ -30,7 +31,7 @@ public final class Article {
     private String correctionNote;
 
     private Article(ArticleId id, String language, String sectionId, ArticleOrigin origin,
-                    String ingestItemId, Slug slug, String title, ArticleState state,
+                    String ingestItemId, Slug slug, String title, String body, ArticleState state,
                     int revisionCount, Instant publishedAt, Instant scheduledAt, Instant createdAt,
                     Instant unpublishedAt, String unpublishReason, String correctionNote) {
         this.id = id;
@@ -40,6 +41,7 @@ public final class Article {
         this.ingestItemId = ingestItemId;
         this.slug = slug;
         this.title = title;
+        this.body = body;
         this.state = state;
         this.revisionCount = revisionCount;
         this.publishedAt = publishedAt;
@@ -51,7 +53,7 @@ public final class Article {
     }
 
     public static Article draft(String language, String sectionId, ArticleOrigin origin,
-                                String ingestItemId, Slug slug, String title, Instant now) {
+                                String ingestItemId, Slug slug, String title, String body, Instant now) {
         if (title == null || title.isBlank()) {
             throw new DomainException("ARTICLE_TITLE_REQUIRED", "El artículo necesita título");
         }
@@ -63,14 +65,16 @@ public final class Article {
         }
         Objects.requireNonNull(slug, "slug");
         return new Article(ArticleId.newId(), language, sectionId, origin, ingestItemId,
-                slug, title.trim(), ArticleState.DRAFT, 1, null, null, now, null, null, null);
+                slug, title.trim(), body == null ? "" : body, ArticleState.DRAFT, 1,
+                null, null, now, null, null, null);
     }
 
     public static Article rehydrate(ArticleId id, String language, String sectionId, ArticleOrigin origin,
-                                    String ingestItemId, Slug slug, String title, ArticleState state,
+                                    String ingestItemId, Slug slug, String title, String body,
+                                    ArticleState state,
                                     int revisionCount, Instant publishedAt, Instant scheduledAt, Instant createdAt,
                                     Instant unpublishedAt, String unpublishReason, String correctionNote) {
-        return new Article(id, language, sectionId, origin, ingestItemId, slug, title, state,
+        return new Article(id, language, sectionId, origin, ingestItemId, slug, title, body, state,
                 revisionCount, publishedAt, scheduledAt, createdAt,
                 unpublishedAt, unpublishReason, correctionNote);
     }
@@ -130,6 +134,7 @@ public final class Article {
     public String ingestItemId() { return ingestItemId; }
     public Slug slug() { return slug; }
     public String title() { return title; }
+    public String body() { return body; }
     public ArticleState state() { return state; }
     public int revisionCount() { return revisionCount; }
     public Instant publishedAt() { return publishedAt; }

@@ -1,4 +1,4 @@
-package com.noticiasplaneta.news.application.service;
+package com.noticiasplaneta.shared.events;
 
 import java.util.UUID;
 

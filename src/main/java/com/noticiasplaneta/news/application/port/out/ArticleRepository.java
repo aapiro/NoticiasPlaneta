@@ -19,4 +19,6 @@ public interface ArticleRepository {
     Optional<Article> findByIngestItemId(String ingestItemId);
 
     long count();
+
+    void saveEmbedding(ArticleId id, float[] embedding);
 }

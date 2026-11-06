@@ -52,11 +52,12 @@ public class CreateDraftService implements CreateDraftFromItemUseCase {
                 command.ingestItemId(),
                 slug,
                 command.title(),
+                command.body(),
                 clock.instant());
 
         Article saved = articles.save(article);
 
-        events.publish(new ArticleDrafted(
+        events.publish(new com.noticiasplaneta.shared.events.ArticleDrafted(
                 saved.id().value(), saved.language(), saved.sectionId(), saved.origin().name()));
 
         return new CreateDraftResult(saved.id(), saved.slug(), true);

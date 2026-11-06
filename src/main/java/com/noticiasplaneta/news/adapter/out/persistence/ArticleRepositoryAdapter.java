@@ -54,6 +54,19 @@ class ArticleRepositoryAdapter implements ArticleRepository {
         return jpa.count();
     }
 
+    @Override
+    @Transactional
+    public void saveEmbedding(ArticleId id, float[] embedding) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) {
+                sb.append(',');
+            }
+            sb.append(embedding[i]);
+        }
+        jpa.updateEmbedding(id.value(), sb.append(']').toString());
+    }
+
     private ArticleJpaEntity toEntity(Article a) {
         ArticleJpaEntity e = new ArticleJpaEntity();
         e.id = a.id().value();
@@ -63,6 +76,7 @@ class ArticleRepositoryAdapter implements ArticleRepository {
         e.ingestItemId = a.ingestItemId();
         e.slug = a.slug().value();
         e.title = a.title();
+        e.body = a.body();
         e.state = a.state();
         e.revisionCount = a.revisionCount();
         e.publishedAt = a.publishedAt();
@@ -77,7 +91,7 @@ class ArticleRepositoryAdapter implements ArticleRepository {
     private Article toDomain(ArticleJpaEntity e) {
         return Article.rehydrate(
                 new ArticleId(e.id), e.language, e.sectionId, e.origin, e.ingestItemId,
-                new Slug(e.slug), e.title, e.state, e.revisionCount,
+                new Slug(e.slug), e.title, e.body, e.state, e.revisionCount,
                 e.publishedAt, e.scheduledAt, e.createdAt,
                 e.unpublishedAt, e.unpublishReason, e.correctionNote);
     }

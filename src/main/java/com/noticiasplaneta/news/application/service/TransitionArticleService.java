@@ -53,7 +53,7 @@ public class TransitionArticleService implements TransitionArticleUseCase {
                 saved.state().name(),
                 clock.instant()));
 
-        events.publish(new ArticleStateChanged(
+        events.publish(new com.noticiasplaneta.shared.events.ArticleStateChanged(
                 saved.id().value(), previous.name(), saved.state().name(), command.actor().id()));
 
         return saved;

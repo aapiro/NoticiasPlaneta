@@ -83,6 +83,10 @@ public class EnrichArticleService implements EnrichArticleUseCase {
         EnrichmentPort.EnrichmentResult result;
         try {
             result = enricher.enrich(article.title(), article.body());
+        } catch (com.noticiasplaneta.shared.domain.DomainException e) {
+            // código de negocio (AI_NOT_CONFIGURED, AI_PROVIDER_ERROR...) en vez de la clase
+            jobs.markFailed(job.id(), e.code());
+            return false;
         } catch (RuntimeException e) {
             jobs.markFailed(job.id(), e.getClass().getSimpleName());
             return false;

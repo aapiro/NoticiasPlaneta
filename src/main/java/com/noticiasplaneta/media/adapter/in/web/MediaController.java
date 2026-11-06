@@ -38,7 +38,8 @@ class MediaController {
                           @Positive long sizeBytes, String uploaderId) {
     }
 
-    record CommitRequest(@NotBlank String storageKey, String uploaderId) {
+    record CommitRequest(@NotBlank String storageKey, String uploaderId,
+                             String altText, String credit) {
     }
 
     @PostMapping("/presign")
@@ -51,7 +52,8 @@ class MediaController {
     ResponseEntity<CommitResult> commit(@Valid @RequestBody CommitRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(commit.commit(request.storageKey(),
-                        request.uploaderId() == null ? "anon" : request.uploaderId()));
+                        request.uploaderId() == null ? "anon" : request.uploaderId(),
+                        request.altText(), request.credit()));
     }
 
     /** Recibe la subida directa firmada. En fase 2 esto lo sirve el bucket, no la aplicación. */

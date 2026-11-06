@@ -37,6 +37,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("F08 · Aceptación: medios")
 class F08MediosAcceptanceTest {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("pgvector/pgvector:0.8.5-pg16");
@@ -101,7 +104,7 @@ class F08MediosAcceptanceTest {
                 .andExpect(status().isOk());
 
         String commitBody = """
-                {"storageKey":"%s","uploaderId":"u1"}
+                {"storageKey":"%s","uploaderId":"u1","altText":"Un autobús siniestrado en la cuneta","credit":"Redacción"}
                 """.formatted(key);
 
         mvc.perform(post("/api/v1/media/commit").header("X-Api-Key", "test-api-key").contentType(APPLICATION_JSON).content(commitBody))
@@ -119,14 +122,14 @@ class F08MediosAcceptanceTest {
 
         JsonNode first = presign("image/png", png.length);
         mvc.perform(put(first.get("uploadUrl").asText()).contentType("image/png").content(png));
-        String firstBody = "{\"storageKey\":\"%s\",\"uploaderId\":\"u1\"}"
+        String firstBody = "{\"storageKey\":\"%s\",\"uploaderId\":\"u1\",\"altText\":\"El mismo autobús, misma foto\"}"
                 .formatted(first.get("storageKey").asText());
         mvc.perform(post("/api/v1/media/commit").header("X-Api-Key", "test-api-key").contentType(APPLICATION_JSON).content(firstBody))
                 .andExpect(status().isCreated());
 
         JsonNode second = presign("image/png", png.length);
         mvc.perform(put(second.get("uploadUrl").asText()).contentType("image/png").content(png));
-        String secondBody = "{\"storageKey\":\"%s\",\"uploaderId\":\"u1\"}"
+        String secondBody = "{\"storageKey\":\"%s\",\"uploaderId\":\"u1\",\"altText\":\"El mismo autobús, misma foto\"}"
                 .formatted(second.get("storageKey").asText());
         mvc.perform(post("/api/v1/media/commit").header("X-Api-Key", "test-api-key").contentType(APPLICATION_JSON).content(secondBody))
                 .andExpect(status().isCreated())
@@ -152,5 +155,29 @@ class F08MediosAcceptanceTest {
                         .content("{\"filename\":\"a.svg\",\"contentType\":\"image/svg+xml\",\"sizeBytes\":10,\"uploaderId\":\"u1\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MIME_NOT_ALLOWED"));
+    }
+
+    @Test
+    @DisplayName("Escenario: sin texto alternativo el commit se rechaza y el objeto no queda registrado")
+    void sinTextoAlternativo() throws Exception {
+        byte[] png = pngBytes(140, 90);
+        JsonNode presigned = presign("image/png", png.length);
+        String uploadUrl = presigned.get("uploadUrl").asText();
+        String key = presigned.get("storageKey").asText();
+
+        mvc.perform(put(uploadUrl).contentType("image/png").content(png))
+                .andExpect(status().isOk());
+
+        String sinAlt = """
+                {"storageKey":"%s","uploaderId":"u1"}
+                """.formatted(key);
+
+        mvc.perform(post("/api/v1/media/commit").header("X-Api-Key", "test-api-key")
+                        .contentType(APPLICATION_JSON).content(sinAlt))
+                .andExpect(status().isBadRequest());
+
+        Integer registrados = jdbc.queryForObject(
+                "select count(*) from media_asset where storage_key = ?", Integer.class, key);
+        org.assertj.core.api.Assertions.assertThat(registrados).isZero();
     }
 }

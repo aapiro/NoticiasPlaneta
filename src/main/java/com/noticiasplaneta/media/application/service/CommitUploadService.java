@@ -32,7 +32,14 @@ public class CommitUploadService implements CommitUploadUseCase {
     }
 
     @Override
-    public CommitResult commit(String storageKey, String uploaderId) {
+    public CommitResult commit(String storageKey, String uploaderId, String altText, String credit) {
+        if (altText == null || altText.trim().length() < MediaAsset.MIN_ALT_LENGTH) {
+            storage.delete(storageKey);
+            throw new DomainException("ALT_TEXT_REQUIRED",
+                    "Una imagen sin texto alternativo no existe para quien no la ve "
+                            + "(mínimo " + MediaAsset.MIN_ALT_LENGTH + " caracteres)");
+        }
+
         byte[] raw;
         try {
             raw = storage.get(storageKey);
@@ -59,7 +66,7 @@ public class CommitUploadService implements CommitUploadUseCase {
 
         MediaAsset asset = MediaAsset.register(
                 processed.sha256(), processed.mime(), processed.width(), processed.height(),
-                processed.bytes().length, uploaderId, clock.instant());
+                processed.bytes().length, uploaderId, clock.instant(), altText, credit);
 
         storage.put(asset.storageKey(), processed.bytes());
         storage.delete(storageKey);

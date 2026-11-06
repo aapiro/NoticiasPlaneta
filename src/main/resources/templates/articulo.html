@@ -11,6 +11,15 @@
 
     <p class="correccion" th:if="${articulo.summary() != null}" th:text="${articulo.summary()}">Corrección</p>
 
+    <figure th:each="m : ${medios}" th:if="${m.role() == 'LEAD'}" class="foto">
+        <img th:src="@{'/media/' + ${#strings.substringAfter(m.storageKey(), 'media/')}}"
+             th:alt="${m.altText()}" th:width="${m.width()}" th:height="${m.height()}">
+        <figcaption>
+            <span th:text="${m.caption() ?: m.altText()}">Pie de foto</span>
+            <span class="meta" th:if="${m.credit() != null}" th:text="'Foto: ' + ${m.credit()}"></span>
+        </figcaption>
+    </figure>
+
     <div th:each="parrafo : ${#strings.arraySplit(texto.body(), '\n')}">
         <p th:if="${!#strings.isEmpty(parrafo)}" th:text="${parrafo}">Texto</p>
     </div>

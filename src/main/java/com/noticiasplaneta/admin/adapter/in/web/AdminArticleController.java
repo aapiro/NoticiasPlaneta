@@ -1,5 +1,8 @@
 package com.noticiasplaneta.admin.adapter.in.web;
 
+import com.noticiasplaneta.media.application.port.in.AttachMediaCommand;
+import com.noticiasplaneta.media.application.port.in.ListArticleMediaUseCase;
+import com.noticiasplaneta.media.application.port.in.AttachMediaUseCase;
 import com.noticiasplaneta.news.application.port.in.EditArticleCommand;
 import com.noticiasplaneta.news.application.port.in.EditArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.GetArticleTextUseCase;
@@ -40,11 +43,15 @@ class AdminArticleController {
     private final EditArticleUseCase editArticle;
     private final ListArticleRevisionsUseCase historial;
     private final RestoreArticleRevisionUseCase restaurar;
+    private final AttachMediaUseCase medios;
+    private final ListArticleMediaUseCase biblioteca;
 
     AdminArticleController(GetArticleTextUseCase articleText, ListArticlesUseCase bandeja,
                            TransitionArticleUseCase transition, UnpublishArticleUseCase unpublish,
                            EditArticleUseCase editArticle, ListArticleRevisionsUseCase historial,
-                           RestoreArticleRevisionUseCase restaurar) {
+                           RestoreArticleRevisionUseCase restaurar,
+                           AttachMediaUseCase medios,
+                           ListArticleMediaUseCase biblioteca) {
         this.articleText = articleText;
         this.bandeja = bandeja;
         this.transition = transition;
@@ -52,6 +59,8 @@ class AdminArticleController {
         this.editArticle = editArticle;
         this.historial = historial;
         this.restaurar = restaurar;
+        this.medios = medios;
+        this.biblioteca = biblioteca;
     }
 
     @GetMapping("/admin/articulos/{id}")
@@ -77,6 +86,25 @@ class AdminArticleController {
         } catch (DomainException e) {
             return render(id, statusFor(e), e.getMessage());
         }
+    }
+
+    @PostMapping("/admin/articulos/{id}/medios")
+    ModelAndView adjuntarMedio(@PathVariable String id,
+                               @RequestParam String mediaId,
+                               @RequestParam(defaultValue = "LEAD") String role,
+                               @RequestParam(required = false) String caption) {
+        try {
+            medios.attach(new AttachMediaCommand(id, mediaId, role, 0, caption));
+            return new ModelAndView("redirect:/admin/articulos/" + id + "?media=1");
+        } catch (DomainException e) {
+            return render(id, statusFor(e), e.getMessage());
+        }
+    }
+
+    @PostMapping("/admin/articulos/{id}/medios/{mediaId}/quitar")
+    ModelAndView quitarMedio(@PathVariable String id, @PathVariable String mediaId) {
+        medios.detach(id, mediaId);
+        return new ModelAndView("redirect:/admin/articulos/" + id + "?media=1");
     }
 
     @PostMapping("/admin/articulos/{id}/restaurar")
@@ -139,6 +167,8 @@ class AdminArticleController {
         mav.addObject("transiciones", bandeja.transitionsFrom(estado));
         mav.addObject("etiquetas", ETIQUETAS);
         mav.addObject("versiones", historial.revisions(id));
+        mav.addObject("medios", medios.of(id));
+        mav.addObject("biblioteca", biblioteca.recent(24));
         mav.addObject("publicado", "PUBLISHED".equals(estado));
         mav.addObject("tiposRetirada", bandeja.retirementKinds());
         return mav;

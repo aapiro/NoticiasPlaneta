@@ -387,4 +387,118 @@ class PanelEditorialAcceptanceTest {
         String titulo = jdbc.queryForObject("select title from article where id = ?::uuid", String.class, id);
         org.assertj.core.api.Assertions.assertThat(titulo).isEqualTo("Titular sin versiones guardadas");
     }
+
+    // ---------- fotos en las noticias ----------
+
+    private String unMedio(String alt) {
+        String id = java.util.UUID.randomUUID().toString();
+        String sha = java.util.UUID.randomUUID().toString().replace("-", "")
+                + java.util.UUID.randomUUID().toString().replace("-", "");
+        jdbc.update("""
+                insert into media_asset (id, sha256, storage_key, mime, width, height, size_bytes,
+                                         uploader_id, alt_text, credit)
+                values (?::uuid, ?, ?, 'image/png', 8, 8, 100, 'u-tony', ?, 'Redacción')
+                """, id, sha, "media/" + sha.substring(0, 2) + "/" + sha + ".png", alt);
+        return id;
+    }
+
+    @Test
+    @DisplayName("Una foto adjunta se ve en la página pública")
+    void fotoEnArticulo() throws Exception {
+        String id = borrador("Noticia con foto principal");
+        String mediaId = unMedio("Un autobús siniestrado en la cuneta");
+        publicar(id);
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/medios").with(conSesion(session)).with(csrf())
+                        .param("mediaId", mediaId).param("role", "LEAD")
+                        .param("caption", "El vehículo quedó cruzado en la calzada."))
+                .andExpect(status().is3xxRedirection());
+
+        String slug = jdbc.queryForObject("select slug from article where id = ?::uuid", String.class, id);
+        mvc.perform(get("/economia/" + slug))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<img")))
+                .andExpect(content().string(org.hamcrest.Matchers
+                        .containsString("Un autobús siniestrado en la cuneta")))
+                .andExpect(content().string(org.hamcrest.Matchers
+                        .containsString("El vehículo quedó cruzado en la calzada.")));
+    }
+
+    @Test
+    @DisplayName("Solo puede haber una imagen principal: la nueva desplaza a la anterior")
+    void unaSolaPrincipal() throws Exception {
+        String id = borrador("Noticia con dos fotos candidatas");
+        String primera = unMedio("Primera foto");
+        String segunda = unMedio("Segunda foto");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/medios").with(conSesion(session)).with(csrf())
+                        .param("mediaId", primera).param("role", "LEAD"))
+                .andExpect(status().is3xxRedirection());
+        mvc.perform(post("/admin/articulos/" + id + "/medios").with(conSesion(session)).with(csrf())
+                        .param("mediaId", segunda).param("role", "LEAD"))
+                .andExpect(status().is3xxRedirection());
+
+        Integer principales = jdbc.queryForObject(
+                "select count(*) from article_media where article_id = ?::uuid and role = 'LEAD'",
+                Integer.class, id);
+        org.assertj.core.api.Assertions.assertThat(principales).isEqualTo(1);
+
+        String cual = jdbc.queryForObject(
+                "select media_id::text from article_media where article_id = ?::uuid and role = 'LEAD'",
+                String.class, id);
+        org.assertj.core.api.Assertions.assertThat(cual).isEqualTo(segunda);
+    }
+
+    @Test
+    @DisplayName("Quitar una foto la saca del artículo")
+    void quitarFoto() throws Exception {
+        String id = borrador("Noticia a la que se le quita la foto");
+        String mediaId = unMedio("Foto que se va a quitar");
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/medios").with(conSesion(session)).with(csrf())
+                        .param("mediaId", mediaId).param("role", "LEAD"))
+                .andExpect(status().is3xxRedirection());
+        mvc.perform(post("/admin/articulos/" + id + "/medios/" + mediaId + "/quitar")
+                        .with(conSesion(session)).with(csrf()))
+                .andExpect(status().is3xxRedirection());
+
+        Integer quedan = jdbc.queryForObject(
+                "select count(*) from article_media where article_id = ?::uuid", Integer.class, id);
+        org.assertj.core.api.Assertions.assertThat(quedan).isZero();
+    }
+
+    @Test
+    @DisplayName("El binario se sirve con caché inmutable y sin adivinar el tipo")
+    void sirveBinario() throws Exception {
+        String mediaId = unMedio("Foto servible");
+        String key = jdbc.queryForObject(
+                "select storage_key from media_asset where id = ?::uuid", String.class, mediaId);
+        String ruta = "/" + key;
+
+        // sin el fichero en disco debe dar 404, no 500
+        mvc.perform(get(ruta))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("La portada muestra la miniatura del artículo que tiene foto principal")
+    void miniaturaEnPortada() throws Exception {
+        String id = borrador("Noticia con foto que sale en portada");
+        String mediaId = unMedio("Foto de la noticia de portada");
+        publicar(id);
+        MockHttpSession session = sesion("jefa@noticiasplaneta.com");
+
+        mvc.perform(post("/admin/articulos/" + id + "/medios").with(conSesion(session)).with(csrf())
+                        .param("mediaId", mediaId).param("role", "LEAD"))
+                .andExpect(status().is3xxRedirection());
+
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("class=\"miniatura\"")))
+                .andExpect(content().string(org.hamcrest.Matchers
+                        .containsString("Foto de la noticia de portada")));
+    }
 }

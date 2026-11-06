@@ -7,6 +7,9 @@
     <p class="vacio" th:if="${#lists.isEmpty(articulos)}">Todavía no hay artículos publicados.</p>
 
     <article th:each="a : ${articulos}">
+        <img th:if="${medios.get(a.id()) != null}" class="miniatura"
+             th:src="@{'/media/' + ${#strings.substringAfter(medios.get(a.id()).storageKey(), 'media/')}}"
+             th:alt="${medios.get(a.id()).altText()}" width="200" height="120" loading="lazy">
         <h2>
             <a class="titular" th:href="@{'/' + ${a.sectionId()} + '/' + ${a.slug()}}"
                th:text="${a.title()}">Titular</a>

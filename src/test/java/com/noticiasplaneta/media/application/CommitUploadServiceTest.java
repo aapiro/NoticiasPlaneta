@@ -59,7 +59,7 @@ class CommitUploadServiceTest {
     void commitValido() {
         storage.seed("tmp/1", PNG);
 
-        CommitResult result = commit.commit("tmp/1", "u1");
+        CommitResult result = commit.commit("tmp/1", "u1", "Un autobús siniestrado en la cuneta", "Redacción");
 
         assertThat(result.deduplicated()).isFalse();
         assertThat(result.mime()).isEqualTo("image/png");
@@ -76,7 +76,7 @@ class CommitUploadServiceTest {
         byte[] pdf = {'%', 'P', 'D', 'F', '-', '1', '.', '7', 0, 0, 0, 0, 0, 0, 0, 0};
         storage.seed("tmp/2", pdf);
 
-        assertThatThrownBy(() -> commit.commit("tmp/2", "u1"))
+        assertThatThrownBy(() -> commit.commit("tmp/2", "u1", "Un autobús siniestrado en la cuneta", "Redacción"))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).code())
                 .isEqualTo("MIME_MISMATCH");
@@ -89,10 +89,10 @@ class CommitUploadServiceTest {
     @DisplayName("El mismo binario subido dos veces se deduplica")
     void deduplica() {
         storage.seed("tmp/1", PNG);
-        CommitResult first = commit.commit("tmp/1", "u1");
+        CommitResult first = commit.commit("tmp/1", "u1", "Un autobús siniestrado en la cuneta", "Redacción");
 
         storage.seed("tmp/2", PNG);
-        CommitResult second = commit.commit("tmp/2", "u1");
+        CommitResult second = commit.commit("tmp/2", "u1", "Un autobús siniestrado en la cuneta", "Redacción");
 
         assertThat(second.deduplicated()).isTrue();
         assertThat(second.mediaId()).isEqualTo(first.mediaId());
@@ -103,7 +103,7 @@ class CommitUploadServiceTest {
     @Test
     @DisplayName("Un objeto inexistente devuelve MEDIA_NOT_FOUND")
     void objetoInexistente() {
-        assertThatThrownBy(() -> commit.commit("tmp/no-existe", "u1"))
+        assertThatThrownBy(() -> commit.commit("tmp/no-existe", "u1", "Un autobús siniestrado en la cuneta", "Redacción"))
                 .isInstanceOf(DomainException.class)
                 .extracting(e -> ((DomainException) e).code())
                 .isEqualTo("MEDIA_NOT_FOUND");

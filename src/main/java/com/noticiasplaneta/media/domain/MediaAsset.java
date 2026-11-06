@@ -41,13 +41,22 @@ public final class MediaAsset {
         this.credit = credit;
     }
 
+    /** Mínimo del texto alternativo: "foto" no describe nada. */
+    public static final int MIN_ALT_LENGTH = 8;
+
     public static MediaAsset register(String sha256, String mime, int width, int height,
-                                      long sizeBytes, String uploaderId, Instant now) {
+                                      long sizeBytes, String uploaderId, Instant now,
+                                      String altText, String credit) {
         if (sha256 == null || sha256.length() != 64) {
             throw new DomainException("MEDIA_HASH_INVALID", "Huella de contenido inválida");
         }
         if (!AllowedMime.isAllowed(mime)) {
             throw new DomainException("MIME_NOT_ALLOWED", "Tipo no permitido: " + mime);
+        }
+        if (altText == null || altText.trim().length() < MIN_ALT_LENGTH) {
+            throw new DomainException("ALT_TEXT_REQUIRED",
+                    "Una imagen sin texto alternativo no existe para quien no la ve "
+                            + "(mínimo " + MIN_ALT_LENGTH + " caracteres)");
         }
         if (width <= 0 || height <= 0) {
             throw new DomainException("MEDIA_DIMENSIONS_INVALID", "Dimensiones inválidas");
@@ -57,7 +66,8 @@ public final class MediaAsset {
         }
         String key = storageKeyFor(sha256, mime);
         return new MediaAsset(MediaAssetId.newId(), sha256, key, mime, width, height,
-                sizeBytes, Objects.requireNonNull(uploaderId, "uploaderId"), now, null, null);
+                sizeBytes, Objects.requireNonNull(uploaderId, "uploaderId"), now,
+                altText.trim(), credit == null || credit.isBlank() ? null : credit.trim());
     }
 
     public static MediaAsset rehydrate(MediaAssetId id, String sha256, String storageKey, String mime,

@@ -75,6 +75,47 @@
         </form>
     </section>
 
+    <h2>Imágenes</h2>
+    <p class="meta" th:if="${#lists.isEmpty(medios)}">Este artículo no tiene imágenes.</p>
+    <div th:unless="${#lists.isEmpty(medios)}" class="galeria">
+        <figure th:each="m : ${medios}">
+            <img th:src="@{'/media/' + ${#strings.substringAfter(m.storageKey(), 'media/')}}"
+                 th:alt="${m.altText()}" width="160" loading="lazy">
+            <figcaption>
+                <span class="estado" th:text="${m.role()}">LEAD</span>
+                <span class="meta" th:text="${m.altText()}">alt</span>
+                <span class="meta" th:if="${m.credit() != null}" th:text="'© ' + ${m.credit()}"></span>
+                <form method="post" class="inline"
+                      th:action="@{/admin/articulos/{id}/medios/{m}/quitar(id=${texto.articleId()}, m=${m.mediaId()})}">
+                    <button type="submit" class="plano">Quitar</button>
+                </form>
+            </figcaption>
+        </figure>
+    </div>
+
+    <form th:unless="${#lists.isEmpty(biblioteca)}" method="post"
+          th:action="@{/admin/articulos/{id}/medios(id=${texto.articleId()})}"
+          style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;margin-top:1rem">
+        <div class="campo" style="flex:1;min-width:16rem;margin:0">
+            <label for="mediaId">Añadir de la biblioteca</label>
+            <select id="mediaId" name="mediaId">
+                <option th:each="m : ${biblioteca}" th:value="${m.mediaId()}"
+                        th:text="${#strings.abbreviate(m.altText(), 60) + ' · ' + m.mime()}">medio</option>
+            </select>
+        </div>
+        <div class="campo" style="width:9rem;margin:0">
+            <label for="role">Papel</label>
+            <select id="role" name="role">
+                <option value="LEAD">Principal</option>
+                <option value="BODY">En el cuerpo</option>
+            </select>
+        </div>
+        <button type="submit">Añadir</button>
+    </form>
+    <p class="meta" th:if="${#lists.isEmpty(biblioteca)}">
+        No hay medios subidos todavía: súbelos por la API de medios.
+    </p>
+
     <h2>Historial de versiones</h2>
     <p class="meta" th:if="${#lists.isEmpty(versiones)}">
         Sin versiones anteriores: este artículo no se ha editado todavía.

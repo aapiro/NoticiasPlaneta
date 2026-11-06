@@ -20,9 +20,16 @@ services:
       DB_URL: jdbc:postgresql://db:5432/noticias
       DB_USER: noticias
       DB_PASSWORD: ${DB_PASSWORD:-noticias}
+      AGENT_API_KEY: ${AGENT_API_KEY:-clave-de-desarrollo}
+      AGENT_ID: ${AGENT_ID:-newsroom-agent}
+      RP_ID: ${RP_ID:-localhost}
+      RP_ORIGIN: ${RP_ORIGIN:-https://localhost}
+      MEDIA_ROOT: /data/media
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - media-data:/data/media
     restart: unless-stopped
     expose:
       - "8080"
@@ -42,5 +49,6 @@ services:
 
 volumes:
   db-data:
+  media-data:
   caddy-data:
   caddy-config:

@@ -17,3 +17,11 @@ management:
     web:
       exposure:
         include: health,info
+
+security:
+  api-key: ${AGENT_API_KEY:}
+  agent-id: ${AGENT_ID:newsroom-agent}
+  rp-id: ${RP_ID:localhost}
+  rp-name: Noticias Planeta
+  allowed-origins:
+    - ${RP_ORIGIN:https://localhost}

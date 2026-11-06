@@ -13,7 +13,9 @@ WORKDIR /app
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl \
  && rm -rf /var/lib/apt/lists/* \
- && useradd -r -u 1001 -m noticias
+ && useradd -r -u 1001 -m noticias \
+ && mkdir -p /data/media \
+ && chown -R noticias:noticias /data
 COPY --from=build /app/target/*.jar app.jar
 USER noticias
 EXPOSE 8080

@@ -59,7 +59,13 @@ solo es accesible dentro de la red de Compose.
 | POST | `/api/v1/sources/{id}/ingest` | ejecuta la ingesta de esa fuente |
 | POST | `/api/v1/articles` | crea un borrador |
 | POST | `/api/v1/articles/{id}/transitions` | cambia de estado (con reglas de rol) |
+| POST | `/api/v1/media/presign` | firma una URL de subida directa |
+| PUT | `/api/v1/media/blob/{key}` | recibe el binario (firma HMAC) |
+| POST | `/api/v1/media/commit` | valida, reencodea y registra el activo |
 | GET | `/actuator/health` | salud |
+
+Todas las rutas de escritura exigen la cabecera `X-Api-Key` (agentes). La URL prefirmada de
+subida lleva su propia firma HMAC y no necesita cabecera.
 
 ## Estado
 
@@ -68,3 +74,5 @@ solo es accesible dentro de la red de Compose.
 | F01 Ingesta de fuentes | implementado y probado |
 | F02 Borradores desde ingesta | implementado y probado |
 | F05 Flujo editorial y auditoría | implementado y probado |
+| F08 Medios | implementado y probado |
+| F09 Seguridad | cadenas y clave de agente; WebAuthn cableado |

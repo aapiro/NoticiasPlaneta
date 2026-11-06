@@ -43,6 +43,11 @@ class HexagonalArchitectureTest {
                     .should().dependOnClassesThat().resideInAnyPackage("..adapter..");
 
     @ArchTest
+    static final ArchRule los_controladores_no_tocan_adaptadores_de_salida =
+            noClasses().that().resideInAPackage("..adapter.in..")
+                    .should().dependOnClassesThat().resideInAPackage("..adapter.out..");
+
+    @ArchTest
     static final ArchRule los_modulos_solo_hablan_por_puertos =
             classes().that().resideInAPackage("com.noticiasplaneta..")
                     .and().resideOutsideOfPackage("com.noticiasplaneta.shared..")

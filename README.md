@@ -51,6 +51,38 @@ docker compose up -d --build      # app + PostgreSQL/pgvector + Caddy
 La app queda detrás de Caddy en `https://localhost` (certificado local) y el puerto 8080
 solo es accesible dentro de la red de Compose.
 
+## Observabilidad LLM (Langfuse)
+
+La app exporta trazas OpenTelemetry a [Langfuse](https://langfuse.com) por OTLP/HTTP.
+Cada enriquecido genera una traza `enrich-article` con:
+
+- `enrich-article` (span raíz): título del artículo, proveedor y versión del prompt.
+- `generate-enrichment` (generation): modelo `deepseek-flash`, mensajes enviados,
+  salida (tags, entidades y resumen), tokens y errores.
+
+### Configurar
+
+1. Crea un proyecto en <https://cloud.langfuse.com>.
+2. Copia `.env.example` a `.env` y rellena `LANGFUSE_PUBLIC_KEY` y `LANGFUSE_SECRET_KEY`
+   (Settings → API Keys). Nunca subas `.env`.
+3. Arranca con `docker compose up -d --build` o `make run`.
+
+Sin claves, el tracing queda **desactivado (no-op)**: la app arranca y funciona igual.
+
+### Verificar
+
+```bash
+set -a; source .env; set +a
+./mvnw -q -Dtest=LangfuseLiveSmokeTest test
+```
+
+El test imprime `LANGFUSE_TRACE_ID=...`; búscalo en **Traces** o consúltalo por API:
+
+```bash
+curl -s -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" \
+  "$LANGFUSE_HOST/api/public/traces/<id>"
+```
+
 ## API
 
 | Método | Ruta | Qué hace |
@@ -100,6 +132,6 @@ contraseña + TOTP, y **no debe exponerse a Internet** hasta migrar a passkeys.
 | F08 Medios | implementado y probado |
 | F09 Seguridad | cadenas y clave de agente; WebAuthn cableado |
 | F10 Búsqueda híbrida | implementado y probado |
-| F03 Enriquecido (DeepSeek) | implementado; requiere `DEEPSEEK_API_KEY` |
+| F03 Enriquecido (DeepSeek) | implementado; requiere `DEEPSEEK_API_KEY`; trazas en Langfuse |
 | F12 Servidor MCP | 3 herramientas para agentes, sin herramienta de publicación |
 | F13 Panel editorial | bandeja, editor, transiciones y retirada; auth provisional (ADR-010) |

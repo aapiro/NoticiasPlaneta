@@ -53,6 +53,16 @@ ai:
   worker:
     delay-ms: 30000
 
+langfuse:
+  enabled: ${LANGFUSE_ENABLED:true}
+  host: ${LANGFUSE_HOST:https://cloud.langfuse.com}
+  public-key: ${LANGFUSE_PUBLIC_KEY:}
+  secret-key: ${LANGFUSE_SECRET_KEY:}
+  sample-rate: ${LANGFUSE_SAMPLE_RATE:1.0}
+  service-name: ${LANGFUSE_SERVICE_NAME:noticiasplaneta}
+  environment: ${LANGFUSE_ENVIRONMENT:production}
+  max-payload-chars: ${LANGFUSE_MAX_PAYLOAD_CHARS:30000}
+
 ingest:
   scheduler:
     enabled: true

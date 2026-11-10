@@ -89,6 +89,18 @@ También puedes abrirlo en la UI:
 $LANGFUSE_BASE_URL/project/<projectId>/traces/<id>
 ```
 
+## Reintentar enriquecidos
+
+Si la app arrancó sin `DEEPSEEK_API_KEY`, los jobs de IA quedan en `FAILED`. Después de
+añadir la clave y recrear la app:
+
+```bash
+make backfill-ai
+```
+
+El script `scripts/backfill-ai-jobs.sql` devuelve a `PENDING` solo los jobs de artículos
+que siguen publicados, encola los publicados que nunca tuvieron job y es idempotente.
+
 ## API
 
 | Método | Ruta | Qué hace |

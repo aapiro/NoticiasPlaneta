@@ -5,7 +5,7 @@ import com.noticiasplaneta.shared.domain.DomainException;
 import com.noticiasplaneta.shared.observability.LangfuseTracer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ import java.util.Map;
  * interpretarse como instrucciones (RN3 de F03).
  */
 @Component
-@ConditionalOnProperty(name = "ai.deepseek.api-key")
+@Conditional(DeepSeekConfiguredCondition.class)
 public class DeepSeekEnrichmentAdapter implements EnrichmentPort {
 
     private static final Logger log = LoggerFactory.getLogger(DeepSeekEnrichmentAdapter.class);

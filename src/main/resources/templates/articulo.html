@@ -9,6 +9,11 @@
         <time th:datetime="${articulo.publishedAt()}" th:text="${articulo.publishedLabel()}">fecha</time>
     </p>
 
+    <p class="meta" th:if="${fuentes != null and fuentes.independentSourceCount() > 0}">
+        <span th:text="${fuentes.independentSourceCount()}">0</span> fuentes contrastadas
+        <span th:text="${'· ' + fuentes.contrastLevel()}">· LOW</span>
+    </p>
+
     <p class="correccion" th:if="${articulo.summary() != null}" th:text="${articulo.summary()}">Corrección</p>
 
     <figure th:each="m : ${medios}" th:if="${m.role() == 'LEAD'}" class="foto">

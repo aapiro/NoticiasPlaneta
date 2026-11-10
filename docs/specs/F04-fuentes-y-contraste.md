@@ -1,6 +1,10 @@
 # F04 — Vinculación de fuentes y cálculo de contraste
 
-**Módulo:** `news` · **Estado:** borrador · **Versión:** 1
+**Módulo:** `news` · **Estado:** implementado (backend y página) · **Versión:** 1
+
+> La comprobación de URL es síncrona con timeout de 5 s. Queda pendiente la regla RN2
+> (una fuente oficial y una prensa que la cita no son independientes) y exigir
+> `contrast_level != low` al publicar desde F05.
 
 ## 1. Contexto
 Un hecho vale lo que valen sus fuentes. Este flujo cuenta cuántas fuentes **independientes**

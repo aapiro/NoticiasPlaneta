@@ -2,6 +2,7 @@ package com.noticiasplaneta.web.adapter.in;
 
 import com.noticiasplaneta.media.application.port.in.ListArticleMediaUseCase;
 import com.noticiasplaneta.news.application.port.in.ArticleText;
+import com.noticiasplaneta.news.application.port.in.GetArticleSourcesUseCase;
 import com.noticiasplaneta.news.application.port.in.GetPublishedArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.PublishedArticle;
 import com.noticiasplaneta.news.application.port.in.RetiredArticle;
@@ -30,10 +31,13 @@ class ArticlePageController {
 
     private final GetPublishedArticleUseCase articles;
     private final ListArticleMediaUseCase medios;
+    private final GetArticleSourcesUseCase fuentes;
 
-    ArticlePageController(GetPublishedArticleUseCase articles, ListArticleMediaUseCase medios) {
+    ArticlePageController(GetPublishedArticleUseCase articles, ListArticleMediaUseCase medios,
+                          GetArticleSourcesUseCase fuentes) {
         this.articles = articles;
         this.medios = medios;
+        this.fuentes = fuentes;
     }
 
     @GetMapping("/{sectionId}/{slug}")
@@ -49,6 +53,7 @@ class ArticlePageController {
             mav.addObject("articulo", article);
             mav.addObject("texto", texto);
             mav.addObject("medios", medios.of(article.id()));
+            mav.addObject("fuentes", fuentes.get(article.id()));
             return mav;
         }
 

@@ -29,12 +29,12 @@ import java.util.Base64;
  */
 @Configuration
 @EnableConfigurationProperties(LangfuseProperties.class)
-class LangfuseTracingConfiguration {
+public class LangfuseTracingConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(LangfuseTracingConfiguration.class);
 
     @Bean(destroyMethod = "close")
-    OpenTelemetrySdk openTelemetry(LangfuseProperties properties) {
+    public OpenTelemetrySdk openTelemetry(LangfuseProperties properties) {
         if (!properties.active()) {
             log.info("Langfuse: tracing desactivado (faltan claves o langfuse.enabled=false)");
             return OpenTelemetrySdk.builder()

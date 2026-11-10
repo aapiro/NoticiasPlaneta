@@ -30,7 +30,8 @@ class LangfuseOtlpExportTest {
         server.createContext("/api/public/otel/v1/traces", exchange -> {
             authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
             ingestionVersion.set(exchange.getRequestHeaders().getFirst("x-langfuse-ingestion-version"));
-            bodyBytes.set(exchange.getRequestBody().readAllBytes().length);
+            byte[] body = exchange.getRequestBody().readAllBytes();
+            bodyBytes.set(body.length);
             exchange.sendResponseHeaders(200, -1);
             exchange.close();
         });

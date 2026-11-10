@@ -62,9 +62,9 @@ Cada enriquecido genera una traza `enrich-article` con:
 
 ### Configurar
 
-1. Crea un proyecto en <https://cloud.langfuse.com>.
-2. Copia `.env.example` a `.env` y rellena `LANGFUSE_PUBLIC_KEY` y `LANGFUSE_SECRET_KEY`
-   (Settings → API Keys). Nunca subas `.env`.
+1. Crea un proyecto en tu instancia de Langfuse (Cloud o self-hosted).
+2. Copia `.env.example` a `.env` y rellena `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`
+   y `LANGFUSE_BASE_URL` (Settings → API Keys). Nunca subas `.env`.
 3. Arranca con `docker compose up -d --build` o `make run`.
 
 Sin claves, el tracing queda **desactivado (no-op)**: la app arranca y funciona igual.
@@ -80,7 +80,13 @@ El test imprime `LANGFUSE_TRACE_ID=...`; búscalo en **Traces** o consúltalo po
 
 ```bash
 curl -s -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" \
-  "$LANGFUSE_HOST/api/public/traces/<id>"
+  "$LANGFUSE_BASE_URL/api/public/v2/observations?traceId=<id>&fields=core,basic,io,model,usage,prompt,trace_context"
+```
+
+También puedes abrirlo en la UI:
+
+```
+$LANGFUSE_BASE_URL/project/<projectId>/traces/<id>
 ```
 
 ## API

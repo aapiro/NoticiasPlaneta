@@ -28,7 +28,8 @@ class LangfuseLiveSmokeTest {
 
     @Test
     void emiteUnTraceReal() {
-        String host = System.getenv().getOrDefault("LANGFUSE_HOST", "https://cloud.langfuse.com");
+        String host = System.getenv().getOrDefault("LANGFUSE_BASE_URL",
+                System.getenv().getOrDefault("LANGFUSE_HOST", "https://cloud.langfuse.com"));
         LangfuseProperties properties = new LangfuseProperties(
                 true, host,
                 System.getenv("LANGFUSE_PUBLIC_KEY"),

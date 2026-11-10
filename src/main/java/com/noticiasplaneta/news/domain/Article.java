@@ -117,6 +117,22 @@ public final class Article {
         return previous;
     }
 
+    /**
+     * F06: programa la publicación para una hora futura.
+     *
+     * <p>No reutiliza {@link #transitionTo} porque allí el instante se fija a "ahora";
+     * aquí la hora la elige el editor y se guarda en {@code scheduled_at}.
+     */
+    public void schedule(Actor actor, Instant publishAt, Instant now) {
+        TransitionPolicy.assertCanPerform(actor, this.state, ArticleState.SCHEDULED, this.sectionId);
+        if (publishAt == null || !publishAt.isAfter(now)) {
+            throw new DomainException("PUBLISH_AT_INVALID",
+                    "La fecha de publicación debe ser futura");
+        }
+        this.state = ArticleState.SCHEDULED;
+        this.scheduledAt = publishAt;
+    }
+
     public void rename(String newTitle) {
         if (newTitle == null || newTitle.isBlank()) {
             throw new DomainException("ARTICLE_TITLE_REQUIRED", "El artículo necesita título");

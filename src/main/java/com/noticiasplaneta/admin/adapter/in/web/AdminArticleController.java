@@ -11,6 +11,8 @@ import com.noticiasplaneta.news.application.port.in.ListArticlesUseCase;
 import com.noticiasplaneta.news.application.port.in.RestoreArticleRevisionUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
+import com.noticiasplaneta.news.application.port.in.SchedulePublishCommand;
+import com.noticiasplaneta.news.application.port.in.SchedulePublishUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishCommand;
 import com.noticiasplaneta.shared.domain.DomainException;
@@ -24,6 +26,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -39,6 +46,7 @@ class AdminArticleController {
     private final GetArticleTextUseCase articleText;
     private final ListArticlesUseCase bandeja;
     private final TransitionArticleUseCase transition;
+    private final SchedulePublishUseCase schedule;
     private final UnpublishArticleUseCase unpublish;
     private final EditArticleUseCase editArticle;
     private final ListArticleRevisionsUseCase historial;
@@ -47,7 +55,8 @@ class AdminArticleController {
     private final ListArticleMediaUseCase biblioteca;
 
     AdminArticleController(GetArticleTextUseCase articleText, ListArticlesUseCase bandeja,
-                           TransitionArticleUseCase transition, UnpublishArticleUseCase unpublish,
+                           TransitionArticleUseCase transition, SchedulePublishUseCase schedule,
+                           UnpublishArticleUseCase unpublish,
                            EditArticleUseCase editArticle, ListArticleRevisionsUseCase historial,
                            RestoreArticleRevisionUseCase restaurar,
                            AttachMediaUseCase medios,
@@ -55,6 +64,7 @@ class AdminArticleController {
         this.articleText = articleText;
         this.bandeja = bandeja;
         this.transition = transition;
+        this.schedule = schedule;
         this.unpublish = unpublish;
         this.editArticle = editArticle;
         this.historial = historial;
@@ -134,6 +144,23 @@ class AdminArticleController {
         }
     }
 
+    @PostMapping("/admin/articulos/{id}/programar")
+    ModelAndView programar(@PathVariable String id,
+                           @RequestParam String publicarEn,
+                           Authentication authentication) {
+        try {
+            LocalDateTime local = LocalDateTime.parse(publicarEn);
+            Instant publishAt = local.atZone(ZoneId.of("Europe/Madrid")).toInstant();
+            schedule.schedule(SchedulePublishCommand.of(
+                    id, AdminActor.from(authentication), publishAt, null));
+            return new ModelAndView("redirect:/admin/articulos/" + id);
+        } catch (DomainException e) {
+            return render(id, statusFor(e), e.getMessage());
+        } catch (DateTimeParseException e) {
+            return render(id, HttpStatus.BAD_REQUEST, "Fecha de publicación inválida");
+        }
+    }
+
     @PostMapping("/admin/articulos/{id}/retirar")
     ModelAndView retirar(@PathVariable String id,
                          @RequestParam String tipo,
@@ -163,8 +190,14 @@ class AdminArticleController {
         mav.addObject("estado", estado);
         mav.addObject("error", error);
         mav.addObject("auditoria", bandeja.auditOf(id));
-        // RN2: las transiciones posibles las dicta el dominio, no la plantilla
-        mav.addObject("transiciones", bandeja.transitionsFrom(estado));
+        // RN2: las transiciones posibles las dicta el dominio, no la plantilla.
+        // SCHEDULED se gestiona aparte porque necesita una hora concreta.
+        var transiciones = new ArrayList<>(bandeja.transitionsFrom(estado));
+        boolean puedeProgramar = transiciones.remove("SCHEDULED");
+        mav.addObject("transiciones", transiciones);
+        mav.addObject("puedeProgramar", puedeProgramar);
+        mav.addObject("ahora", LocalDateTime.now(ZoneId.of("Europe/Madrid"))
+                .plusHours(1).withSecond(0).withNano(0));
         mav.addObject("etiquetas", ETIQUETAS);
         mav.addObject("versiones", historial.revisions(id));
         mav.addObject("medios", medios.of(id));

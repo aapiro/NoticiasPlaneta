@@ -24,6 +24,11 @@ public record Actor(String id, ActorType type, Set<String> roles, Set<String> se
         return new Actor(id, ActorType.AGENT, roles, Set.of());
     }
 
+    /** Actor de sistema para tareas programadas (publicación diferida, outbox). */
+    public static Actor system() {
+        return new Actor("system", ActorType.SYSTEM, Set.of("ADMIN"), Set.of());
+    }
+
     public boolean hasAnyRole(String... candidates) {
         for (String candidate : candidates) {
             if (roles.contains(candidate)) {

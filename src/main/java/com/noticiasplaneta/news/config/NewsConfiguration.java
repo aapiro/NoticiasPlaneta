@@ -17,6 +17,11 @@ import com.noticiasplaneta.news.application.port.out.ArticleRevisionRepository;
 import com.noticiasplaneta.news.application.service.ArticleQueryService;
 import com.noticiasplaneta.news.application.port.in.StoreArticleEmbeddingUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
+import com.noticiasplaneta.news.application.port.in.SchedulePublishUseCase;
+import com.noticiasplaneta.news.application.port.in.PublishScheduledUseCase;
+import com.noticiasplaneta.news.application.port.out.OutboxPort;
+import com.noticiasplaneta.news.application.service.SchedulePublishService;
+import com.noticiasplaneta.news.application.service.PublishScheduledService;
 import com.noticiasplaneta.news.application.service.GetArticleTextService;
 import com.noticiasplaneta.news.application.service.StoreArticleEmbeddingService;
 import com.noticiasplaneta.news.application.port.out.CachePurgePort;
@@ -98,5 +103,17 @@ class NewsConfiguration {
                                                       EventPublisher events,
                                                       Clock clock) {
         return new TransitionArticleService(articles, audit, events, clock);
+    }
+
+    @Bean
+    SchedulePublishUseCase schedulePublishUseCase(ArticleRepository articles, AuditPort audit,
+                                                  EventPublisher events, Clock clock) {
+        return new SchedulePublishService(articles, audit, events, clock);
+    }
+
+    @Bean
+    PublishScheduledUseCase publishScheduledUseCase(ArticleRepository articles, AuditPort audit,
+                                                    EventPublisher events, OutboxPort outbox) {
+        return new PublishScheduledService(articles, audit, events, outbox);
     }
 }

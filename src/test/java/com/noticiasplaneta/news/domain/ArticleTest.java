@@ -101,4 +101,35 @@ class ArticleTest {
                 .isInstanceOf(DomainException.class);
         assertThat(article.body()).isEqualTo("Cuerpo");
     }
+
+    @Test
+    @DisplayName("F06: programar guarda la hora elegida")
+    void programar() {
+        Article article = Article.draft("es", "economia", ArticleOrigin.MANUAL, null,
+                Slug.fromTitle("Titular"), "Titular", "Cuerpo", NOW);
+        Actor chief = Actor.human("u-chief", java.util.Set.of("CHIEF"), java.util.Set.of("economia"));
+        article.transitionTo(ArticleState.IN_REVIEW, chief, NOW);
+        article.transitionTo(ArticleState.APPROVED, chief, NOW);
+
+        Instant future = NOW.plusSeconds(3_600);
+        article.schedule(chief, future, NOW);
+
+        assertThat(article.state()).isEqualTo(ArticleState.SCHEDULED);
+        assertThat(article.scheduledAt()).isEqualTo(future);
+    }
+
+    @Test
+    @DisplayName("F06: no se programa en el pasado")
+    void programarEnPasado() {
+        Article article = Article.draft("es", "economia", ArticleOrigin.MANUAL, null,
+                Slug.fromTitle("Titular"), "Titular", "Cuerpo", NOW);
+        Actor chief = Actor.human("u-chief", java.util.Set.of("CHIEF"), java.util.Set.of("economia"));
+        article.transitionTo(ArticleState.IN_REVIEW, chief, NOW);
+        article.transitionTo(ArticleState.APPROVED, chief, NOW);
+
+        assertThatThrownBy(() -> article.schedule(chief, NOW.minusSeconds(1), NOW))
+                .isInstanceOfSatisfying(DomainException.class,
+                        error -> assertThat(error.code()).isEqualTo("PUBLISH_AT_INVALID"));
+        assertThat(article.state()).isEqualTo(ArticleState.APPROVED);
+    }
 }

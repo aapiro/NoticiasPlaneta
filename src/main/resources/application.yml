@@ -68,5 +68,13 @@ ingest:
     enabled: true
     delay-ms: 900000
 
+publish:
+  scheduler:
+    delay-ms: 30000
+
+outbox:
+  relay:
+    delay-ms: 10000
+
 news:
   default-section: general

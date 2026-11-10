@@ -5,6 +5,8 @@ import com.noticiasplaneta.news.application.port.in.CreateDraftFromItemUseCase;
 import com.noticiasplaneta.news.application.port.in.CreateDraftResult;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.TransitionCommand;
+import com.noticiasplaneta.news.application.port.in.SchedulePublishCommand;
+import com.noticiasplaneta.news.application.port.in.SchedulePublishUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.UnpublishCommand;
 import com.noticiasplaneta.news.domain.UnpublishKind;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Set;
 
 @RestController
@@ -33,12 +37,14 @@ class ArticleController {
     private final CreateDraftFromItemUseCase createDraft;
     private final TransitionArticleUseCase transition;
     private final UnpublishArticleUseCase unpublish;
+    private final SchedulePublishUseCase schedule;
 
     ArticleController(CreateDraftFromItemUseCase createDraft, TransitionArticleUseCase transition,
-                      UnpublishArticleUseCase unpublish) {
+                      UnpublishArticleUseCase unpublish, SchedulePublishUseCase schedule) {
         this.createDraft = createDraft;
         this.transition = transition;
         this.unpublish = unpublish;
+        this.schedule = schedule;
     }
 
     record NewDraftRequest(
@@ -66,6 +72,11 @@ class ArticleController {
     record UnpublishRequest(@NotBlank String kind, @NotBlank String reason,
                             @NotBlank String actorId, @NotBlank String actorType,
                             Set<String> roles, Set<String> sections) {
+    }
+
+    record ScheduleRequest(@NotBlank String publishAt, @NotBlank String actorId,
+                           @NotBlank String actorType, Set<String> roles, Set<String> sections,
+                           String reason) {
     }
 
     record ArticleResponse(String id, String slug, String state, String publishedAt,
@@ -129,6 +140,29 @@ class ArticleController {
                 ArticleState.valueOf(request.target().toUpperCase()),
                 actor,
                 request.reason()));
+
+        return ResponseEntity.ok(ArticleResponse.of(article));
+    }
+
+    @PostMapping("/{id}/schedule")
+    ResponseEntity<ArticleResponse> schedule(@PathVariable String id,
+                                             @Valid @RequestBody ScheduleRequest request) {
+        Actor actor = new Actor(
+                request.actorId(),
+                ActorType.valueOf(request.actorType().toUpperCase()),
+                request.roles() == null ? Set.of() : request.roles(),
+                request.sections() == null ? Set.of() : request.sections());
+
+        Instant publishAt;
+        try {
+            publishAt = Instant.parse(request.publishAt());
+        } catch (DateTimeParseException e) {
+            throw new com.noticiasplaneta.shared.domain.DomainException(
+                    "PUBLISH_AT_INVALID", "La fecha debe ser ISO-8601, por ejemplo 2026-11-10T18:00:00Z");
+        }
+
+        Article article = schedule.schedule(new SchedulePublishCommand(
+                ArticleId.of(id), actor, publishAt, request.reason()));
 
         return ResponseEntity.ok(ArticleResponse.of(article));
     }

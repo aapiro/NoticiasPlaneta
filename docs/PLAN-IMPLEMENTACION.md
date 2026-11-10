@@ -47,6 +47,13 @@ Estado a 2026-11-06. Orden pensado para que cada fase deje algo desplegable y pr
 - 🟡 F12 servidor MCP con 3 herramientas (buscar, leer, crear borrador); sin herramienta de publicación
 - Skills de Hermes y cron de ingesta
 
+## Fase 6 — Publicación programada (hecho)
+
+- ✅ F06: `POST /api/v1/articles/{id}/schedule` y formulario del panel con fecha/hora.
+- ✅ Scheduler cada 30 s, actor `SYSTEM`, outbox transaccional y relay idempotente.
+- ✅ `article.scheduled_at` actúa como `publishAt`; el estado y el evento se guardan juntos.
+- Pendiente: F04 fuentes y contraste, y la gestión de temas de F11.
+
 ## Deuda asumida y consciente
 
 | Deuda | Cuándo se paga |

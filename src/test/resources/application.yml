@@ -5,3 +5,11 @@ ingest:
 ai:
   worker:
     delay-ms: 3600000
+
+publish:
+  scheduler:
+    enabled: false
+
+outbox:
+  relay:
+    enabled: false

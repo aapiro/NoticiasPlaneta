@@ -3,9 +3,13 @@ package com.noticiasplaneta.news.support;
 import com.noticiasplaneta.news.application.port.out.ArticleRepository;
 import com.noticiasplaneta.news.domain.Article;
 import com.noticiasplaneta.news.domain.ArticleId;
+import com.noticiasplaneta.news.domain.ArticleState;
 import com.noticiasplaneta.news.domain.Slug;
 
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,5 +52,17 @@ public class InMemoryArticles implements ArticleRepository {
     @Override
     public long count() {
         return data.size();
+    }
+
+    @Override
+    public List<ArticleId> findScheduledDue(Instant now, int limit) {
+        return data.values().stream()
+                .filter(article -> article.state() == ArticleState.SCHEDULED)
+                .filter(article -> article.scheduledAt() != null
+                        && !article.scheduledAt().isAfter(now))
+                .sorted(Comparator.comparing(Article::scheduledAt))
+                .limit(limit)
+                .map(Article::id)
+                .toList();
     }
 }

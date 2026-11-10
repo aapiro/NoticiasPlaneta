@@ -109,6 +109,7 @@ que siguen publicados, encola los publicados que nunca tuvieron job y es idempot
 | POST | `/api/v1/sources/{id}/ingest` | ejecuta la ingesta de esa fuente |
 | POST | `/api/v1/articles` | crea un borrador |
 | POST | `/api/v1/articles/{id}/transitions` | cambia de estado (con reglas de rol) |
+| POST | `/api/v1/articles/{id}/schedule` | programa la publicación con `publishAt` ISO-8601 |
 | POST | `/api/v1/media/presign` | firma una URL de subida directa |
 | PUT | `/api/v1/media/blob/{key}` | recibe el binario (firma HMAC) |
 | POST | `/api/v1/media/commit` | valida, reencodea y registra el activo |
@@ -147,6 +148,7 @@ contraseña + TOTP, y **no debe exponerse a Internet** hasta migrar a passkeys.
 | F01 Ingesta de fuentes | implementado y probado |
 | F02 Borradores desde ingesta | implementado y probado |
 | F05 Flujo editorial y auditoría | implementado y probado |
+| F06 Publicación programada | implementado y probado (scheduler + outbox + relay) |
 | F08 Medios | implementado y probado |
 | F09 Seguridad | cadenas y clave de agente; WebAuthn cableado |
 | F10 Búsqueda híbrida | implementado y probado |

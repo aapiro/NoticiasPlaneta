@@ -3,10 +3,14 @@ package com.noticiasplaneta.news.adapter.out.persistence;
 import com.noticiasplaneta.news.application.port.out.ArticleRepository;
 import com.noticiasplaneta.news.domain.Article;
 import com.noticiasplaneta.news.domain.ArticleId;
+import com.noticiasplaneta.news.domain.ArticleState;
 import com.noticiasplaneta.news.domain.Slug;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -65,6 +69,16 @@ class ArticleRepositoryAdapter implements ArticleRepository {
             sb.append(embedding[i]);
         }
         jpa.updateEmbedding(id.value(), sb.append(']').toString());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ArticleId> findScheduledDue(Instant now, int limit) {
+        return jpa.findByStateAndScheduledAtLessThanEqualOrderByScheduledAtAsc(
+                        ArticleState.SCHEDULED, now, PageRequest.of(0, limit))
+                .stream()
+                .map(entity -> new ArticleId(entity.id))
+                .toList();
     }
 
     private ArticleJpaEntity toEntity(Article a) {

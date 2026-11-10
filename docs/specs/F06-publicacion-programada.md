@@ -1,6 +1,9 @@
 # F06 — Publicación programada y propagación
 
-**Módulo:** `news` + `publish` · **Estado:** borrador · **Versión:** 1
+**Módulo:** `news` + `publish` · **Estado:** implementado · **Versión:** 1
+
+> Implementado usando `article.scheduled_at` como hora de publicación (`publishAt`),
+> para no duplicar columnas. El scheduler corre cada 30 s y el relay del outbox cada 10 s.
 
 ## 1. Contexto
 Publicar es una transición más la propagación de efectos: purga de CDN, índice de búsqueda,
@@ -62,7 +65,7 @@ Escenario: Reprocesar el outbox no duplica el aviso
 
 ## 8. Datos
 `outbox(id, aggregate_id, event_type, payload jsonb, created_at, processed_at, attempts, last_error)`
-`article.publish_at`, `article.published_at`
+`article.scheduled_at` (hora de publicación) y `article.published_at`
 
 ## 9. Puertos
 In: `SchedulePublishUseCase`, `PublishScheduledJob` · Out: `OutboxRepository`, `CdnPurgePort`, `SearchIndexPort`, `SitemapPort`, `NotificationPort`

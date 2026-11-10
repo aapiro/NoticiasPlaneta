@@ -48,6 +48,15 @@
             <input type="hidden" name="destino" th:value="${t}">
             <button type="submit" th:text="${etiquetas.get(t) ?: t}">Publicar</button>
         </form>
+        <form th:if="${puedeProgramar}" method="post"
+              th:action="@{/admin/articulos/{id}/programar(id=${texto.articleId()})}">
+            <div class="campo">
+                <label for="publicarEn">Publicar el</label>
+                <input type="datetime-local" id="publicarEn" name="publicarEn"
+                       th:value="${ahora}" required>
+            </div>
+            <button type="submit">Programar</button>
+        </form>
         <p class="meta" th:if="${#lists.isEmpty(transiciones)}">
             No hay transiciones disponibles desde este estado.
         </p>

@@ -1,0 +1,14 @@
+# Solo desarrollo local: acceso al portal sin TLS.
+#
+# https://localhost sigue siendo la via buena, pero exige confiar en la CA de
+# Caddy (scripts/trust-caddy-local.sh install, que pide autorizacion de macOS).
+# Este puerto en loopback permite ver el portal sin pelear con el certificado:
+#
+#   http://localhost:8081
+#
+# Va atado a 127.0.0.1: no se publica a la red. El panel (/admin) necesita
+# cookies Secure y no funciona bien por aqui; para el panel, usa https.
+services:
+  app:
+    ports:
+      - "127.0.0.1:8081:8080"

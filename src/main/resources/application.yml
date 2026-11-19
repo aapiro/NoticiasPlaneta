@@ -37,6 +37,18 @@ admin:
     password-hash: ${ADMIN_PASSWORD_HASH:}
     totp-secret: ${ADMIN_TOTP_SECRET:}
 
+# Capacidades de IA activables (ADR-011). Todas apagadas por defecto: el sistema
+# funciona sin IA y se enciende por capacidad. En F1 manda la tabla feature_flag.
+features:
+  ai:
+    capabilities:
+      SEARCH_SEMANTIC: ${AI_SEARCH_SEMANTIC:OFF}
+      ENRICH_TAGS: ${AI_ENRICH_TAGS:OFF}
+      ENRICH_ENTITIES: ${AI_ENRICH_ENTITIES:OFF}
+      ENRICH_SUMMARY: ${AI_ENRICH_SUMMARY:OFF}
+      ARTICLE_RELATED: ${AI_ARTICLE_RELATED:OFF}
+      PUBLISH_AUTO: ${AI_PUBLISH_AUTO:OFF}
+
 security:
   api-key: ${AGENT_API_KEY:}
   agent-id: ${AGENT_ID:newsroom-agent}

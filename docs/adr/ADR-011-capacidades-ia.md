@@ -172,3 +172,45 @@ más para ofrecer el modo local a quien tenga material sensible.
 | Variables de entorno y redeploy para cambiar | No se puede probar ni vender por feature |
 | Servicio de feature flags externo | Dependencia y coste para un monolito con un inquilino |
 | Multi-tenant desde el principio | Complejidad sin clientes; basta con la interfaz `EntitlementsPort` |
+
+## Estado de implementación
+
+### F0 — Esqueleto y puerta (hecho)
+
+| Pieza | Dónde |
+|---|---|
+| `AiCapability` (6 valores) y `AiMode` (4 modos) | `ai/domain/` |
+| Puerto de lectura `AiCapabilities` | `ai/application/port/out/` |
+| Valores iniciales desde `application.yml` | `ConfigAiCapabilities`, sección `features.ai.capabilities` |
+| Decorador `GatedEnrichmentPort` | `ai/adapter/out/llm/`, `@Primary` sobre el proveedor real |
+| No encolar con la capacidad apagada | `ArticlePublishedListener` |
+
+Con la capacidad en `OFF`, el `EnrichmentPort` real recibe **cero llamadas** y el job no llega
+a crearse. Si alguien lo fuerza, el job falla con `AI_CAPABILITY_DISABLED`, que es un código
+inequívoco en `ai_job`, no un resultado vacío que parezca bueno.
+
+Test: `GatedEnrichmentPortTest` (4), `ArticlePublishedListenerTest` (3).
+
+### F1 — Fuente de verdad en base de datos (hecho)
+
+| Pieza | Dónde |
+|---|---|
+| Tabla `feature_flag` (V17) | `db/migration/V17__ai_capabilities.sql` |
+| Lectura con caché y escritura | `DatabaseAiCapabilities` (implementa `AiCapabilities` y `AiCapabilitiesAdminPort`) |
+| Caso de uso | `AiCapabilitiesAdminUseCase` + `AiCapabilitiesAdminService` |
+| Panel | `GET/POST /admin/capacidades`, plantilla `admin/capacidades.html` |
+
+La tabla manda sobre el `application.yml`. Cambiar un modo desde el panel refresca la caché
+en el acto: el siguiente job ya usa el modo nuevo, sin reiniciar. El cambio queda con
+`updated_by` y `updated_at`. El panel va bajo la cadena de `/admin/**` (sesión + CSRF).
+
+Test: `DatabaseAiCapabilitiesTest` (4) — incluido el cambio en caliente sin recrear el bean.
+
+### Lección de arquitectura
+
+El test de arquitectura rechazó la primera versión del panel por dos motivos, y tenía razón:
+el controlador hablaba con un adaptador de persistencia de otro módulo y el servicio de
+aplicación conocía el adaptador. La forma correcta es la habitual del proyecto: **puerto de
+entrada** (`AiCapabilitiesAdminUseCase`, con tipos propios) y **puerto de salida de escritura**
+(`AiCapabilitiesAdminPort`). Ni el panel ni la capa de aplicación ven un adaptador.
+

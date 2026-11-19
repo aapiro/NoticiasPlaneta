@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Capacidades IA — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Capacidades de IA</h1>
+    <p class="meta">
+        Se activan capacidades, no proveedores. Todo apagado por defecto: el portal funciona sin IA.
+        El cambio surte efecto en el siguiente trabajo, sin reiniciar.
+    </p>
+
+    <div class="aviso" th:if="${param.ok}">
+        Guardado: <strong th:text="${param.ok}"></strong>
+    </div>
+    <div class="error" th:if="${param.error}">
+        Capacidad desconocida.
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Capacidad</th>
+            <th>Modo</th>
+            <th>Estado</th>
+            <th>Cambiar</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${capacidades}">
+            <td><strong th:text="${c.capability}">ENRICH_TAGS</strong></td>
+            <td th:text="${c.mode}">OFF</td>
+            <td>
+                <span class="estado"
+                      th:classappend="${!c.on} ? 'ARCHIVED' : 'PUBLISHED'"
+                      th:text="${c.on} ? 'activa' : 'apagada'">apagada</span>
+            </td>
+            <td>
+                <form method="post" th:action="@{/admin/capacidades}" class="inline">
+                    <input type="hidden" name="capability" th:value="${c.capability}">
+                    <select name="mode" aria-label="Modo">
+                        <option th:each="m : ${modos}"
+                                th:value="${m}"
+                                th:text="${m}"
+                                th:selected="${m == c.mode}">OFF</option>
+                    </select>
+                    <button type="submit" class="plano">Guardar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Qué significa cada modo</h2>
+    <ul class="meta">
+        <li><strong>OFF</strong> — no se ejecuta y la interfaz no lo ofrece.</li>
+        <li><strong>LOCAL</strong> — Ollama en el servidor: coste cero, nada sale de la máquina.</li>
+        <li><strong>EXTERNAL</strong> — proveedor externo (DeepSeek). Solo contenido publicado o de fuente pública.</li>
+        <li><strong>HYBRID</strong> — embeddings locales + generación externa. El recomendado.</li>
+    </ul>
+
+    <div class="aviso">
+        <strong>PUBLISH_AUTO</strong> publica sin intervención humana. No la enciendas sin reglas
+        explícitas (fuente de confianza, sección permitida, límite diario) y sin revisar el registro
+        de auditoría.
+    </div>
+</main>
+</body>
+</html>

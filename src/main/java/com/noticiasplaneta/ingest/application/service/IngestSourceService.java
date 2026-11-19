@@ -8,6 +8,7 @@ import com.noticiasplaneta.ingest.application.port.out.FeedFetchOutcome;
 import com.noticiasplaneta.ingest.application.port.out.FeedFetcher;
 import com.noticiasplaneta.ingest.application.port.out.IngestItemRepository;
 import com.noticiasplaneta.ingest.application.port.out.SourceRepository;
+import com.noticiasplaneta.ingest.domain.ContentHash;
 import com.noticiasplaneta.ingest.domain.FeedEntry;
 import com.noticiasplaneta.ingest.domain.IngestItem;
 import com.noticiasplaneta.ingest.domain.Source;
@@ -18,7 +19,9 @@ import com.noticiasplaneta.shared.domain.EventPublisher;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * F01 — Ingesta de fuentes.
@@ -95,6 +98,8 @@ public class IngestSourceService implements IngestSourceUseCase {
         int rejected = 0;
         List<IngestItem> toPersist = new ArrayList<>();
         List<IngestItemReceived> eventsToPublish = new ArrayList<>();
+        Set<String> seenExternalIds = new HashSet<>();
+        Set<ContentHash> seenHashes = new HashSet<>();
 
         for (FeedEntry entry : fetched.entries()) {
             IngestItem item;
@@ -102,6 +107,15 @@ public class IngestSourceService implements IngestSourceUseCase {
                 item = IngestItem.receive(source.id(), entry);
             } catch (DomainException e) {
                 rejected++;
+                continue;
+            }
+
+            // El propio feed puede traer el mismo item repetido: si solo se comprueba
+            // contra la BD, ambos pasan y el INSERT viola uq_ingest_item_source_external.
+            boolean newExternalId = seenExternalIds.add(item.externalId());
+            boolean newHash = seenHashes.add(item.contentHash());
+            if (!newExternalId || !newHash) {
+                duplicated++;
                 continue;
             }
 

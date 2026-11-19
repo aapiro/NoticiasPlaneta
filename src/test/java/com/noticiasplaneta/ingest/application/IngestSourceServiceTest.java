@@ -91,6 +91,25 @@ class IngestSourceServiceTest {
     }
 
     @Test
+    @DisplayName("Un feed con entradas repetidas en el mismo lote no rompe la ingesta")
+    void duplicadosDentroDelMismoLote() {
+        // caso real (20minutos): el propio feed trae dos items con el mismo enlace.
+        // antes del fix ambos pasaban el chequeo contra la BD y el INSERT violaba
+        // uq_ingest_item_source_external.
+        fetcher.willReturn(new FeedFetchOutcome.Fetched(List.of(
+                entry("rep", "Noticia repetida", "https://boe.es/rep"),
+                entry("rep", "Noticia repetida", "https://boe.es/rep")), null, null));
+
+        IngestReport report = service.run(source.id());
+
+        assertThat(report.fetched()).isEqualTo(2);
+        assertThat(report.created()).isEqualTo(1);
+        assertThat(report.duplicated()).isEqualTo(1);
+        assertThat(items.count()).isEqualTo(1);
+        assertThat(events.published()).hasSize(1);
+    }
+
+    @Test
     @DisplayName("304 no es un error y actualiza la marca de comprobación")
     void notModifiedNoEsError() {
         fetcher.willReturn(new FeedFetchOutcome.NotModified());

@@ -5,3 +5,6 @@ target/
 .DS_Store
 .env
 *.log
+
+# CA local de Caddy (no versionar)
+.certs/

@@ -3,30 +3,36 @@
       th:replace="~{layout :: page(${articulo.title()}, ~{::main})}">
 <body>
 <main>
-    <p class="meta"><span class="seccion" th:text="${articulo.sectionId()}">seccion</span></p>
-    <h1 th:text="${articulo.title()}">Titular</h1>
-    <p class="meta" th:if="${articulo.publishedAt() != null}">
-        <time th:datetime="${articulo.publishedAt()}" th:text="${articulo.publishedLabel()}">fecha</time>
-    </p>
+    <div class="cuerpo-articulo">
+        <span class="chip vivo" th:text="${articulo.sectionId()}">seccion</span>
 
-    <p class="meta" th:if="${fuentes != null and fuentes.independentSourceCount() > 0}">
-        <span th:text="${fuentes.independentSourceCount()}">0</span> fuentes contrastadas
-        <span th:text="${'· ' + fuentes.contrastLevel()}">· LOW</span>
-    </p>
+        <h1 th:text="${articulo.title()}">Titular</h1>
 
-    <p class="correccion" th:if="${articulo.summary() != null}" th:text="${articulo.summary()}">Corrección</p>
+        <p class="meta">
+            <time th:if="${articulo.publishedAt() != null}" th:datetime="${articulo.publishedAt()}"
+                  th:text="${articulo.publishedLabel()}">fecha</time>
+            <span th:if="${fuentes != null and fuentes.independentSourceCount() > 0}">
+                <span th:text="${fuentes.independentSourceCount()}">0</span> fuentes contrastadas
+                · <span th:text="${fuentes.contrastLevel()}">LOW</span>
+            </span>
+        </p>
 
-    <figure th:each="m : ${medios}" th:if="${m.role() == 'LEAD'}" class="foto">
-        <img th:src="@{'/media/' + ${#strings.substringAfter(m.storageKey(), 'media/')}}"
-             th:alt="${m.altText()}" th:width="${m.width()}" th:height="${m.height()}">
-        <figcaption>
-            <span th:text="${m.caption() ?: m.altText()}">Pie de foto</span>
-            <span class="meta" th:if="${m.credit() != null}" th:text="'Foto: ' + ${m.credit()}"></span>
-        </figcaption>
-    </figure>
+        <p class="correccion" th:if="${articulo.summary() != null}" th:text="${articulo.summary()}">Corrección</p>
 
-    <div th:each="parrafo : ${#strings.arraySplit(texto.body(), '\n')}">
-        <p th:if="${!#strings.isEmpty(parrafo)}" th:text="${parrafo}">Texto</p>
+        <figure class="foto" th:if="${articulo.imageUrl() != null and #lists.isEmpty(medios)}">
+            <img th:src="${articulo.imageUrl()}" th:alt="${articulo.title()}" loading="eager">
+        </figure>
+
+        <figure th:each="m : ${medios}" th:if="${m.role() == 'LEAD'}" class="foto">
+            <img th:src="@{'/media/' + ${#strings.substringAfter(m.storageKey(), 'media/')}}"
+                 th:alt="${m.altText()}" th:width="${m.width()}" th:height="${m.height()}">
+            <figcaption>
+                <span th:text="${m.caption() ?: m.altText()}">Pie de foto</span>
+                <span th:if="${m.credit() != null}" th:text="' · Foto: ' + ${m.credit()}"></span>
+            </figcaption>
+        </figure>
+
+        <p class="entradilla" th:text="${texto.body()}">Texto</p>
     </div>
 </main>
 </body>

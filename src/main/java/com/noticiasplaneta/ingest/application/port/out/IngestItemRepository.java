@@ -18,6 +18,16 @@ public interface IngestItemRepository {
 
     long count();
 
+    /**
+     * Rellena la foto de un item que ya existía sin ella.
+     *
+     * <p>Los items ingeridos antes de que se leyera Media RSS tienen {@code image_url}
+     * nulo; al reingerir, el feed trae la foto y aquí se aprovecha sin duplicar el item.
+     *
+     * @return {@code true} si se actualizó alguna fila
+     */
+    boolean backfillImage(SourceId sourceId, String externalId, String imageUrl);
+
     java.util.Optional<com.noticiasplaneta.ingest.domain.IngestItem> findById(
             com.noticiasplaneta.ingest.domain.IngestItemId id);
 }

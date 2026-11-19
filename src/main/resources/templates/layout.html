@@ -5,58 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${titulo}">Noticias Planeta</title>
     <style>
-        :root { color-scheme: light dark; --tinta: #111; --papel: #fff; --tenue: #666; --linea: #ddd; }
-        @media (prefers-color-scheme: dark) {
-            :root { --tinta: #f2f2f2; --papel: #12141a; --tenue: #9aa4b2; --linea: #2a2f3a; }
+        /* Editorial Nocturne: sistema de diseno, ver docs/diseno/editorial-nocturne/DESIGN.md */
+        :root {
+            --canvas: #0B1220; --raised: #0E1726; --elevated: #152238; --hover: #1A2A44;
+            --text: #F3F4F6; --text-2: #E5E7EB; --muted: #9CA3AF;
+            --border: #1E293B; --border-strong: #334155;
+            --amber: #F59E0B; --amber-hover: #D97706;
+            --amber-glow: rgba(245, 158, 11, .15); --amber-contrast: #FEF3C7;
+            /* Newsreader no esta instalada: Georgia hace de respaldo editorial. */
+            --serif: "Newsreader", Georgia, "Times New Roman", serif;
+            --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            --max: 84rem; --r: .25rem;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; background: var(--papel); color: var(--tinta);
-               font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-        header { border-bottom: 2px solid var(--tinta); padding: 1rem 1.25rem; }
-        .marca { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em;
-                 text-decoration: none; color: var(--tinta); }
-        nav { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .5rem; font-size: .9rem; }
-        nav a { color: var(--tenue); text-decoration: none; }
-        nav a:hover, nav a:focus { color: var(--tinta); text-decoration: underline; }
-        main { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; display: block; }
-        h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 .5rem; }
-        h2 { font-size: 1.25rem; line-height: 1.3; margin: 0 0 .35rem; }
-        article { padding: 1.25rem 0; border-bottom: 1px solid var(--linea); }
+        body { margin: 0; background: var(--canvas); color: var(--text);
+               font: 17px/28px var(--serif); -webkit-font-smoothing: antialiased; }
+        a { color: inherit; }
+
+        header { position: sticky; top: 0; z-index: 20;
+                 background: rgba(11, 18, 32, .92); backdrop-filter: blur(12px);
+                 border-bottom: 1px solid var(--border); }
+        .barra { max-width: var(--max); margin: 0 auto; padding: 0 1.5rem;
+                 display: flex; align-items: center; gap: 1.5rem; min-height: 4rem; flex-wrap: wrap; }
+        .marca { font-family: var(--serif); font-size: 1.5rem; font-weight: 600;
+                 letter-spacing: -.02em; text-decoration: none; color: var(--text); white-space: nowrap; }
+        .marca em { font-style: normal; color: var(--amber); }
+        nav { display: flex; gap: 1.25rem; flex-wrap: wrap; flex: 1 1 auto; }
+        nav a, .accion { font-family: var(--sans); font-size: 12px; font-weight: 500;
+                         letter-spacing: .025em; text-transform: uppercase; color: var(--muted);
+                         text-decoration: none; padding: .25rem 0;
+                         border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
+        nav a:hover, nav a:focus-visible, .accion:hover { color: var(--text); border-color: var(--amber); }
+        nav a[aria-current="true"] { color: var(--text); border-color: var(--amber); }
+
+        main { max-width: var(--max); margin: 0 auto; padding: 2rem 1.5rem 4.5rem; }
+        h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: -.015em; }
+        h1 { font-size: 40px; line-height: 48px; margin: 0 0 .5rem; }
+        h2 { font-size: 22px; line-height: 30px; font-weight: 600; letter-spacing: -.005em; margin: 0 0 .4rem; }
+
+        .chip { display: inline-flex; align-items: center; gap: .4rem;
+                font-family: var(--sans); font-size: 11px; font-weight: 500;
+                letter-spacing: .05em; text-transform: uppercase; color: var(--text-2);
+                background: var(--elevated); border: 1px solid var(--border);
+                border-radius: 9999px; padding: .2rem .55rem; text-decoration: none; }
+        .chip.vivo { color: var(--amber-contrast); background: var(--amber-glow); border-color: var(--amber); }
+        .chip.vivo::before { content: ""; width: 6px; height: 6px; border-radius: 9999px;
+                             background: var(--amber); box-shadow: 0 0 20px -2px rgba(245, 158, 11, .25); }
+        .meta { font-family: var(--sans); font-size: 12px; line-height: 16px;
+                letter-spacing: .025em; color: var(--muted); display: flex;
+                gap: .75rem; flex-wrap: wrap; align-items: center;
+                font-variant-numeric: tabular-nums; margin: .4rem 0 0; }
+        /* dentro de un flex column el chip se estiraria a todo el ancho */
+        .hero-texto .chip, .tarjeta .chip { align-self: flex-start; }
+        .seccion { text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+                   color: var(--amber); font-family: var(--sans); font-size: 11px; }
+
+        .hero { display: grid; grid-template-columns: 1.6fr 1fr; gap: 2rem;
+                padding-bottom: 2rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); }
+        .hero-media { display: block; border-radius: var(--r); overflow: hidden; background: var(--raised); }
+        .hero-media img { width: 100%; height: 100%; max-height: 420px; object-fit: cover; display: block; }
+        .hero-texto { display: flex; flex-direction: column; justify-content: center; gap: .6rem; }
+        .hero-texto h1 a { text-decoration: none; }
+        .hero-texto h1 a:hover { color: var(--amber-contrast); }
+        .destacado { color: var(--amber); font-style: italic; }
+
+        .rejilla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .tarjeta { background: var(--raised); border: 1px solid var(--border);
+                   border-radius: var(--r); overflow: hidden; display: flex;
+                   flex-direction: column; transition: border-color .15s; }
+        .tarjeta:hover { border-color: var(--border-strong); }
+        .tarjeta img { width: 100%; height: 180px; object-fit: cover; display: block; background: var(--elevated); }
+        .tarjeta .cuerpo { padding: 1rem 1rem 1.1rem; display: flex; flex-direction: column; gap: .45rem; }
+        .tarjeta h2 a { text-decoration: none; }
+        .tarjeta h2 a:hover { color: var(--amber-contrast); }
+
+        /* compatibilidad con las plantillas de seccion y articulo */
+        article { padding: 1.25rem 0; border-bottom: 1px solid var(--border); }
         article:last-child { border-bottom: 0; }
-        a.titular { color: var(--tinta); text-decoration: none; }
-        a.titular:hover, a.titular:focus { text-decoration: underline; }
-        .meta { color: var(--tenue); font-size: .85rem; display: flex; gap: .75rem; flex-wrap: wrap; }
-        .seccion { text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
-        .correccion { border-left: 3px solid #b45309; padding: .5rem .75rem; margin: 1rem 0;
-                      background: rgba(180, 83, 9, .08); font-size: .9rem; }
-        form { display: flex; gap: .5rem; margin: 1rem 0 2rem; flex-wrap: wrap; }
-        input[type=search] { flex: 1 1 12rem; padding: .6rem .75rem; font-size: 1rem;
-                             border: 1px solid var(--linea); border-radius: 6px;
-                             background: var(--papel); color: var(--tinta); }
-        button { padding: .6rem 1rem; font-size: 1rem; border-radius: 6px; cursor: pointer;
-                 border: 1px solid var(--tinta); background: var(--tinta); color: var(--papel); }
-        :focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
-        footer { border-top: 1px solid var(--linea); color: var(--tenue); font-size: .8rem;
-                 padding: 1.5rem 1.25rem; text-align: center; }
-        .foto { margin: 1.5rem 0; }
-        .foto img { width: 100%; height: auto; max-height: 460px; object-fit: cover;
-                    border-radius: 4px; }
-        .foto figcaption { font-size: .85rem; color: var(--tenue); margin-top: .4rem; }
-        article .miniatura { float: right; width: 180px; height: auto; margin: 0 0 .75rem 1rem;
-                             border-radius: 4px; }
-        .vacio { color: var(--tenue); font-style: italic; }
+        a.titular { color: var(--text); text-decoration: none; }
+        a.titular:hover, a.titular:focus { color: var(--amber-contrast); }
+        article .miniatura { float: right; width: 180px; height: auto;
+                             margin: 0 0 .75rem 1rem; border-radius: var(--r); }
+        /* en portada la miniatura ocupa la tarjeta, no flota */
+        .hero-media .miniatura, .tarjeta .miniatura {
+            float: none; width: 100%; margin: 0; border-radius: 0;
+            height: 180px; object-fit: cover; display: block; background: var(--elevated);
+        }
+        .hero-media .miniatura { height: 100%; max-height: 420px; }
+        .cuerpo-articulo { max-width: 42rem; margin: 0 auto; }
+        .cuerpo-articulo p { font-size: 17px; line-height: 28px; color: var(--text-2); }
+        /* pre-line respeta los saltos del feed sin partir por letras sueltas */
+        .cuerpo-articulo p.entradilla { white-space: pre-line; }
+        figure, .foto { margin: 1.5rem 0; }
+        figure img, .foto img { width: 100%; height: auto; max-height: 520px;
+                                object-fit: cover; border-radius: var(--r); display: block; }
+        figcaption, .foto figcaption { font-family: var(--sans); font-size: 11px;
+                                        color: var(--muted); margin-top: .5rem; letter-spacing: .05em; }
+        .correccion { border-left: 3px solid var(--amber); background: var(--amber-glow);
+                      padding: .6rem .9rem; margin: 1rem 0; font-size: 15px;
+                      border-radius: 0 var(--r) var(--r) 0; }
+
+        form.buscador { display: flex; gap: .5rem; margin: 1.5rem 0 2rem; flex-wrap: wrap; }
+        input[type=search] { flex: 1 1 16rem; padding: .6rem .8rem; font: 15px/24px var(--sans);
+                             background: var(--raised); color: var(--text);
+                             border: 1px solid var(--border); border-radius: var(--r); }
+        input[type=search]:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+        button { padding: .6rem 1.1rem; font: 600 14px/20px var(--sans); background: var(--amber);
+                 color: var(--canvas); border: 0; border-radius: var(--r); cursor: pointer; }
+        button:hover { background: var(--amber-hover); }
+        :focus-visible { outline: 2px solid var(--amber-contrast); outline-offset: 2px; }
+
+        .vacio { color: var(--muted); font-family: var(--sans); font-size: 14px;
+                 border: 1px dashed var(--border-strong); border-radius: var(--r);
+                 padding: 2rem; text-align: center; }
+        footer { border-top: 1px solid var(--border); color: var(--muted);
+                 font: 11px/16px var(--sans); letter-spacing: .05em;
+                 padding: 1.5rem; text-align: center; text-transform: uppercase; }
+
+        @media (max-width: 1023px) {
+            .hero { grid-template-columns: 1fr; gap: 1.25rem; }
+            .rejilla { grid-template-columns: repeat(2, 1fr); }
+            h1, .hero-texto h1 { font-size: 28px; line-height: 36px; }
+        }
+        @media (max-width: 640px) {
+            .rejilla { grid-template-columns: 1fr; }
+            .barra { padding: 0 1.25rem; min-height: 3.5rem; }
+            main { padding: 1.25rem 1.25rem 3rem; }
+            nav { gap: .9rem; }
+            article .miniatura { float: none; width: 100%; margin: 0 0 .75rem; }
+        }
     </style>
 </head>
 <body>
 <header>
-    <a class="marca" th:href="@{/}">Noticias Planeta</a>
-    <nav aria-label="Secciones">
-        <a th:href="@{/(seccion='espana')}">España</a>
-        <a th:href="@{/(seccion='economia')}">Economía</a>
-        <a th:href="@{/(seccion='mundo')}">Mundo</a>
-        <a th:href="@{/(seccion='deportes')}">Deportes</a>
-        <a th:href="@{/buscar}">Buscar</a>
-    </nav>
+    <div class="barra">
+        <a class="marca" th:href="@{/}">Noticias <em>Planeta</em></a>
+        <nav aria-label="Secciones">
+            <a th:href="@{/(seccion='espana')}" th:aria-current="${seccion == 'espana'}">España</a>
+            <a th:href="@{/(seccion='economia')}" th:aria-current="${seccion == 'economia'}">Economía</a>
+            <a th:href="@{/(seccion='mundo')}" th:aria-current="${seccion == 'mundo'}">Mundo</a>
+            <a th:href="@{/(seccion='deportes')}" th:aria-current="${seccion == 'deportes'}">Deportes</a>
+            <a th:href="@{/buscar}">Buscar</a>
+        </nav>
+    </div>
 </header>
 <main th:replace="${contenido}"></main>
 <footer>Noticias Planeta · periodismo hiperlocal</footer>

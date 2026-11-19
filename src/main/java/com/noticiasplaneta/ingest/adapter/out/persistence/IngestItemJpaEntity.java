@@ -38,6 +38,9 @@ class IngestItemJpaEntity {
 
     String author;
 
+    @Column(name = "image_url")
+    String imageUrl;
+
     protected IngestItemJpaEntity() {
     }
 }

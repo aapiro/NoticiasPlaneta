@@ -24,9 +24,11 @@ public final class IngestItem {
     private final String canonicalUrl;
     private final Instant publishedAt;
     private final String author;
+    private final String imageUrl;
 
     private IngestItem(IngestItemId id, SourceId sourceId, String externalId, ContentHash contentHash,
-                       String title, String body, String canonicalUrl, Instant publishedAt, String author) {
+                       String title, String body, String canonicalUrl, Instant publishedAt, String author,
+                       String imageUrl) {
         this.id = id;
         this.sourceId = sourceId;
         this.externalId = externalId;
@@ -36,6 +38,7 @@ public final class IngestItem {
         this.canonicalUrl = canonicalUrl;
         this.publishedAt = publishedAt;
         this.author = author;
+        this.imageUrl = imageUrl;
     }
 
     public static IngestItem receive(SourceId sourceId, FeedEntry entry) {
@@ -73,7 +76,21 @@ public final class IngestItem {
                 body,
                 url,
                 entry.publishedAt(),
-                entry.author());
+                entry.author(),
+                imagenSegura(entry.imageUrl()));
+    }
+
+    /**
+     * Solo se acepta una URL http/https razonable. Una imagen rota o un
+     * {@code javascript:} colado por el feed no debe llegar a la portada.
+     */
+    private static String imagenSegura(String raw) {
+        if (raw == null) return null;
+        String candidate = raw.trim();
+        if (candidate.isEmpty() || candidate.length() > 2000) return null;
+        String lower = candidate.toLowerCase();
+        if (!lower.startsWith("http://") && !lower.startsWith("https://")) return null;
+        return candidate;
     }
 
     public IngestItemId id() { return id; }
@@ -85,4 +102,5 @@ public final class IngestItem {
     public String canonicalUrl() { return canonicalUrl; }
     public Instant publishedAt() { return publishedAt; }
     public String author() { return author; }
+    public String imageUrl() { return imageUrl; }
 }

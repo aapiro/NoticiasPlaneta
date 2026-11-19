@@ -39,6 +39,15 @@ class IngestItemRepositoryAdapter implements IngestItemRepository {
     }
 
     @Override
+    @Transactional
+    public boolean backfillImage(SourceId sourceId, String externalId, String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank() || externalId == null) {
+            return false;
+        }
+        return jpa.backfillImage(sourceId.value(), externalId, imageUrl) > 0;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean existsBySourceAndContentHash(SourceId sourceId, ContentHash contentHash) {
         return jpa.existsBySourceIdAndContentHash(sourceId.value(), contentHash.value());
@@ -68,6 +77,7 @@ class IngestItemRepositoryAdapter implements IngestItemRepository {
         e.canonicalUrl = i.canonicalUrl();
         e.publishedAt = i.publishedAt();
         e.author = i.author();
+        e.imageUrl = i.imageUrl();
         return e;
     }
 
@@ -75,7 +85,7 @@ class IngestItemRepositoryAdapter implements IngestItemRepository {
     IngestItem toDomain(IngestItemJpaEntity e) {
         return IngestItem.receive(new SourceId(e.sourceId),
                 new com.noticiasplaneta.ingest.domain.FeedEntry(
-                        e.externalId, e.title, e.body, e.canonicalUrl, e.publishedAt, e.author));
+                        e.externalId, e.title, e.body, e.canonicalUrl, e.publishedAt, e.author, e.imageUrl));
     }
 
     IngestItemId idOf(IngestItemJpaEntity e) {

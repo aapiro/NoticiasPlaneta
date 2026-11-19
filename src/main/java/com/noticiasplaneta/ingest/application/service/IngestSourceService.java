@@ -121,6 +121,9 @@ public class IngestSourceService implements IngestSourceUseCase {
 
             if (items.existsBySourceAndExternalId(source.id(), item.externalId())
                     || items.existsBySourceAndContentHash(source.id(), item.contentHash())) {
+                // El item ya está, pero puede que se ingiriera antes de leer Media RSS:
+                // si el feed trae foto y en la base no hay, se rellena.
+                items.backfillImage(source.id(), item.externalId(), item.imageUrl());
                 duplicated++;
                 continue;
             }

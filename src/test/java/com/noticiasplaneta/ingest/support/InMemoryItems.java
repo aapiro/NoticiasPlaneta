@@ -45,6 +45,15 @@ public class InMemoryItems implements IngestItemRepository {
         return data.size();
     }
 
+    /**
+     * El stub en memoria no puede reescribir un {@link IngestItem} (es inmutable).
+     * El backfill real se verifica contra Postgres en los tests de integración.
+     */
+    @Override
+    public boolean backfillImage(SourceId sourceId, String externalId, String imageUrl) {
+        return false;
+    }
+
     public List<IngestItem> all() {
         return List.copyOf(data);
     }

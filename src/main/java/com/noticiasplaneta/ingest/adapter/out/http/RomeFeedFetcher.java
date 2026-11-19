@@ -17,6 +17,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Lee un feed RSS/Atom por HTTP y lo normaliza a {@link FeedEntry}.
@@ -77,17 +78,24 @@ class RomeFeedFetcher implements FeedFetcher {
 
     private List<FeedEntry> parse(byte[] body) {
         List<FeedEntry> result = new ArrayList<>();
+        Map<String, String> fotos = MediaRssImages.extract(body);
         try (XmlReader reader = new XmlReader(new ByteArrayInputStream(body))) {
             SyndFeed feed = new SyndFeedInput().build(reader);
             for (SyndEntry entry : feed.getEntries()) {
                 String description = entry.getDescription() == null ? null : entry.getDescription().getValue();
+                // Rome no expone media:content; la foto viene del extractor propio.
+                String image = fotos.get(entry.getUri());
+                if (image == null) {
+                    image = fotos.get(entry.getLink());
+                }
                 result.add(new FeedEntry(
                         entry.getUri(),
                         entry.getTitle(),
                         description,
                         entry.getLink(),
                         entry.getPublishedDate() == null ? null : entry.getPublishedDate().toInstant(),
-                        entry.getAuthor()));
+                        entry.getAuthor(),
+                        image));
             }
         } catch (Exception e) {
             throw new IllegalStateException("FEED_MALFORMED", e);

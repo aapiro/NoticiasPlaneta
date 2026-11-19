@@ -9,5 +9,12 @@ public record FeedEntry(
         String body,
         String canonicalUrl,
         Instant publishedAt,
-        String author) {
+        String author,
+        String imageUrl) {
+
+    /** Compatibilidad: una entrada sin foto. */
+    public FeedEntry(String externalId, String title, String body, String canonicalUrl,
+                     Instant publishedAt, String author) {
+        this(externalId, title, body, canonicalUrl, publishedAt, author, null);
+    }
 }

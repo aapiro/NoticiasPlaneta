@@ -1,5 +1,8 @@
 package com.noticiasplaneta.mcp.adapter.in.tools;
 
+import com.noticiasplaneta.generation.application.port.in.GenerarBorradorCommand;
+import com.noticiasplaneta.generation.application.port.in.GenerarBorradorUseCase;
+import com.noticiasplaneta.generation.application.port.in.ResultadoGeneracion;
 import com.noticiasplaneta.news.application.port.in.ArticleText;
 import com.noticiasplaneta.news.application.port.in.CreateDraftCommand;
 import com.noticiasplaneta.news.application.port.in.CreateDraftFromItemUseCase;
@@ -26,12 +29,14 @@ public class NoticiasPlanetaTools {
     private final SearchArticlesUseCase search;
     private final CreateDraftFromItemUseCase createDraft;
     private final GetArticleTextUseCase articleText;
+    private final GenerarBorradorUseCase generador;
 
     NoticiasPlanetaTools(SearchArticlesUseCase search, CreateDraftFromItemUseCase createDraft,
-                         GetArticleTextUseCase articleText) {
+                         GetArticleTextUseCase articleText, GenerarBorradorUseCase generador) {
         this.search = search;
         this.createDraft = createDraft;
         this.articleText = articleText;
+        this.generador = generador;
     }
 
     public record Noticia(String articleId, String slug, String seccion, String titular) {
@@ -69,5 +74,22 @@ public class NoticiasPlanetaTools {
         return createDraft.create(CreateDraftCommand.byAgent(
                 ingestItemId == null ? UUID.randomUUID().toString() : ingestItemId,
                 seccion, titular, cuerpo == null ? "" : cuerpo, null));
+    }
+
+    /**
+     * F8 — el agente pide una pieza montada. Se pasa {@code agente(...)}, que no permite
+     * publicación automática: un agente nunca publica (RN5 de F05), aunque la sección
+     * tenga PUBLISH_AUTO.
+     */
+    @McpTool(name = "generar_borrador_desde_tema",
+            description = "Genera un borrador en DRAFT a partir de un tema o titular y una sección, "
+                    + "usando solo material ya ingerido en los últimos 30 días. Devuelve las fuentes "
+                    + "usadas o el motivo por el que no hay material suficiente. Nunca publica.")
+    public ResultadoGeneracion generarBorradorDesdeTema(
+            @McpToolParam(description = "Tema o titular, por ejemplo 'sequía en Cataluña'",
+                    required = true) String tema,
+            @McpToolParam(description = "Sección de destino, por ejemplo 'economia'",
+                    required = true) String seccion) {
+        return generador.generar(GenerarBorradorCommand.agente(tema, seccion, "agente-mcp"));
     }
 }

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Generador — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Generador de borradores</h1>
+    <p class="meta">
+        Escribe un tema o un titular y elige sección. El sistema busca material ya ingerido
+        (últimos 30 días), redacta solo con lo que encuentra y deja la pieza en borrador con
+        sus fuentes. Sin al menos dos medios independientes no hay pieza: se explica y no se inventa.
+    </p>
+
+    <div class="error" th:if="${error}" th:text="${error}">No se pudo generar</div>
+
+    <form method="post" th:action="@{/admin/generador}">
+        <p>
+            <label for="tema">Tema o titular</label><br>
+            <input type="text" id="tema" name="tema" size="70" maxlength="300" required
+                   th:value="${tema}" placeholder="sequía en Cataluña">
+        </p>
+        <p>
+            <label for="seccion">Sección</label><br>
+            <select id="seccion" name="seccion" required>
+                <option th:each="s : ${secciones}"
+                        th:value="${s.slug()}"
+                        th:text="${s.nombre() + ' · ' + s.enfoque()}"
+                        th:selected="${s.slug() == seccionElegida}">Economía · NEUTRAL</option>
+            </select>
+        </p>
+        <p><button type="submit">Generar borrador</button></p>
+    </form>
+
+    <section th:if="${resultado != null}">
+        <h2>Resultado</h2>
+
+        <div class="error" th:if="${!resultado.ok()}">
+            <strong th:text="${resultado.motivo()}">menos_de_2_fuentes_independientes</strong>
+            <p th:text="${resultado.explicacion()}">No hay material suficiente.</p>
+            <p class="meta">
+                Fragmentos encontrados: <span th:text="${resultado.fragmentosRecogidos()}">0</span> ·
+                fuentes independientes: <span th:text="${resultado.fuentesIndependientes()}">0</span>
+            </p>
+        </div>
+
+        <div th:if="${resultado.ok()}">
+            <div class="aviso">
+                <strong th:if="${resultado.publicado()}">Publicada por PUBLISH_AUTO.</strong>
+                <strong th:unless="${resultado.publicado()}">Borrador en DRAFT, pendiente de revisión humana.</strong>
+                <p th:text="${resultado.explicacion()}">Borrador generado.</p>
+                <p class="meta">
+                    <a th:href="@{'/admin/articulos/' + ${resultado.articleId()}}">Abrir en el panel</a>
+                    · sección <span th:text="${resultado.seccion()}">economia</span>
+                    · enfoque <span th:text="${resultado.enfoque()}">NEUTRAL</span>
+                    · prompt <span th:text="${resultado.promptVersion()}">generar-v1</span>
+                    · modelo <span th:text="${resultado.modelo()}">deepseek-flash</span>
+                    · coste <span th:text="${resultado.costeMicros()}">0</span> µUSD
+                </p>
+            </div>
+
+            <h3 th:text="${resultado.titular()}">Titular</h3>
+            <div th:each="p : ${resultado.parrafos()}">
+                <p th:text="${p.texto()}">Párrafo</p>
+                <p class="meta">
+                    Fuentes:
+                    <span th:each="r : ${p.citas()}" th:text="'[' + ${r} + ']'">[1]</span>
+                </p>
+            </div>
+
+            <h3>Fuentes usadas</h3>
+            <table>
+                <thead>
+                <tr><th>#</th><th>Medio</th><th>Fecha</th><th>URL</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="f : ${resultado.fuentes()}">
+                    <td th:text="${f.ref()}">1</td>
+                    <td th:text="${f.medio()}">Medio</td>
+                    <td th:text="${f.fecha()}">2026-11-26T07:00:00Z</td>
+                    <td><a th:href="${f.url()}" th:text="${f.url()}" rel="noopener noreferrer">https://…</a></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div th:if="${!resultado.descartes().isEmpty()}">
+                <h3>Descartado por la verificación</h3>
+                <ul class="meta">
+                    <li th:each="d : ${resultado.descartes()}">
+                        <strong th:text="${d.motivo()}">dato_sin_fuente</strong>
+                        <span th:text="${d.detalle()}">2,3 millones</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

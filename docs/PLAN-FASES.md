@@ -103,6 +103,10 @@ Reglas duras:
 pueden rastrear a las fuentes listadas; dado un tema sin cobertura, no inventa y
 explica que no hay material. Depende de: F1, F3, F4.
 
+**Estado:** implementado el 26/11/2026. Spec en `docs/specs/F8-generador-desde-tema.md`,
+decisiones en `docs/adr/ADR-016-generador-desde-tema.md`. Entradas: panel `/admin/generador`
+y herramienta MCP `generar_borrador_desde_tema`.
+
 ## Orden por valor funcional / esfuerzo
 
 Criterio: primero lo que deja resultado visible en horas, después lo que prepara
@@ -123,7 +127,9 @@ rastro en `audit_log`, sin sesión 302, sin CSRF 403 y con candado contra solape
 6/6 de aceptación, ejecutado sobre el módulo `edicion` que entrega F7), **F3**
 (secciones configurables con enfoque, test 6/6), **F5** (publicación por lotes en la
 bandeja, ADR-013: 20 borradores → 20 publicados y 20 asientos de auditoría en el test
-de aceptación) y **F7** (`/admin/edicion`: última ejecución, estado por sección con
+de aceptación), **F6** (sección automatizada con IA: clasificación por modelo, reglas
+duras, cupo diario, dos interruptores y marca de automática; 10/10 de aceptación y
+verificada en vivo sobre una copia de la base real, ver ADR-015) y **F7** (`/admin/edicion`: última ejecución, estado por sección con
 piezas de hoy y cupo restante, histórico con enlace a la edición generada, ejecutar
 ahora y automático por sección; 10/10 de aceptación, ver ADR-014).
 

@@ -133,16 +133,27 @@ F3 ──┼──> F8
 F4 ──┘
 ```
 
-## Estado del kanban
+## Estado del kanban (26/11/2026, 17:38)
 
-Las siete tareas están preparadas en `scripts/kanban-fases.sh`, que las crea
-colgando del tablero «Noticias Planeta» (`t_dfca1c8f`) del kanban de Hermes.
+Creadas en el tablero «Noticias Planeta» (`t_dfca1c8f`) del kanban de Hermes,
+asignadas a `dev-v1` y en estado `ready`:
 
-No se han podido crear todavía: el tablero `default` tiene tomado el candado de
-escritura porque un worker quedó colgado en la tarea `t_da665e98` (20 minutos sin
-escribir en su log). El CLI espera el candado indefinidamente y el gateway
-bloquea la escritura directa sobre `kanban.db`, así que la vía es liberar el
-candado y ejecutar el script.
+| id | Prioridad | Tarea |
+|---|---:|---|
+| `t_69d778c1` | 100 | Publicación por lotes en el panel |
+| `t_4fadbfc0` | 90 | Botón «Ejecutar edición» en el panel |
+| `t_741bc366` | 80 | Enfoque editorial aplicado al prompt |
+| `t_6feac6da` | 70 | Sección automatizada con IA según su enfoque |
+| `t_790600c9` | 60 | Generador de noticias desde un tema o titular |
+| `t_86c38087` | 50 | Panel de estado editorial y control |
+
+Se crean con `./scripts/kanban-fases.sh` (idempotente en la práctica: si se
+vuelve a ejecutar, duplica, así que solo se lanza una vez).
+
+Nota operativa: el CLI `hermes kanban` se queda esperando si el gateway tiene el
+candado de escritura. Se libera reiniciando el gateway (`hermes gateway restart`),
+no pausándolo: `hermes pause` no lo suelta porque los descriptores viven en el
+propio proceso.
 
 ## Decisiones cerradas (26/11/2026)
 

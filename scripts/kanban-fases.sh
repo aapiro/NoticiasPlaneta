@@ -140,25 +140,9 @@ con la BD. Depende de: F2, F5.
 TXT
 
 # ---------------------------------------------------------------- hechas
-# Se registran y se completan para que quede el historico en el tablero.
-if [ "$DRY" -eq 0 ]; then
-    for par in \
-        "F1 · Edición diaria manual (HECHO)|Script scripts/edicion-diaria.sh verificado en vivo: 522 items nuevos, 200 borradores, 8 publicadas." \
-        "F3 · Secciones configurables (HECHO)|V19 section_config, modulo section con puertos in/out, /admin/secciones con checkbox y enfoque. Test 6/6." ; do
-        titulo="${par%%|*}"
-        cuerpo="${par#*|}"
-        id=$(printf '%s\n' "$cuerpo" | $K create "$titulo" --parent "$BOARD" --assignee dev-v1 \
-                --created-by dev-v1 --priority 0 --body-file - --json 2>&1 \
-             | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 \
-             | sed 's/.*"\(t_[a-f0-9]*\)"/\1/')
-        if [ -n "${id:-}" ]; then
-            $K complete "$id" >/dev/null 2>&1
-            printf '%-10s %3s  %s (completada)\n' "$id" 0 "$titulo"
-        else
-            printf '%-10s %3s  %s\n' FALLO 0 "$titulo"
-        fi
-    done
-fi
+# No se crean: el tablero ya tiene sus equivalentes completadas
+# (t_fc4cc833 agregador, t_8fee767c plantilla, t_2bc900e6 automatizacion).
+# Crearlas otra vez seria ruido.
 
 echo
 echo "Orden: 100 lotes -> 90 boton -> 80 enfoque -> 70 IA -> 60 generador -> 50 panel"

@@ -1,165 +1,165 @@
 #!/usr/bin/env bash
-# Crea en el kanban de Hermes las fases de Noticias Planeta, colgando del
-# tablero "Noticias Planeta" (t_dfca1c8f).
+# Crea en el kanban de Hermes el plan de Noticias Planeta, colgando del tablero
+# "Noticias Planeta" (t_dfca1c8f), ORDENADO POR VALOR FUNCIONAL / ESFUERZO.
 #
-# Se ejecuta cuando el board 'default' esté libre. Si el gateway tiene tomado
-# el candado de escritura, el CLI se queda esperando; no es un fallo del
-# script.
+# Criterio del orden: primero lo que deja resultado visible en horas, despues lo
+# que prepara la IA, y al final el panel de control, que es visibilidad y no
+# desbloquea nada.
 #
-#   ./scripts/kanban-fases.sh            crea todas
-#   ./scripts/kanban-fases.sh --dry-run  solo muestra lo que haría
+#   100  Publicacion por lotes         valor alto,  coste bajo
+#    90  Boton "Ejecutar edicion"      valor alto,  coste bajo
+#    80  Enfoque aplicado al prompt    valor alto,  coste medio
+#    70  Seccion automatizada con IA   valor muy alto, coste alto
+#    60  Generador desde un tema       valor muy alto, coste alto
+#    50  Panel de estado editorial     valor medio, coste medio
+#
+#   ./scripts/kanban-fases.sh            crea todo
+#   ./scripts/kanban-fases.sh --dry-run  solo muestra lo que haria
 set -uo pipefail
 
 BOARD="t_dfca1c8f"
 K="hermes kanban --board default"
-DRY=""
-[ "${1:-}" = "--dry-run" ] && DRY="echo [dry]"
+DRY=0
+[ "${1:-}" = "--dry-run" ] && DRY=1
 
 crear() {
-    local titulo="$1" ; shift
-    if [ -n "$DRY" ]; then
-        echo "[dry] $titulo"
+    local titulo="$1" prioridad="$2"
+    if [ "$DRY" -eq 1 ]; then
+        printf '[dry] %3s  %s\n' "$prioridad" "$titulo"
+        cat > /dev/null
         return 0
     fi
     local id
     id=$($K create "$titulo" --parent "$BOARD" --assignee dev-v1 --created-by dev-v1 \
-             --priority 1 --body-file - --json 2>&1 | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\(t_[a-f0-9]*\)"/\1/')
-    echo "${id:-FALLO}  $titulo"
-    echo "${id:-}" >> /tmp/kanban-fases-ids.txt
+             --priority "$prioridad" --body-file - --json 2>&1 \
+         | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 \
+         | sed 's/.*"\(t_[a-f0-9]*\)"/\1/')
+    printf '%-10s %3s  %s\n' "${id:-FALLO}" "$prioridad" "$titulo"
+    [ -n "${id:-}" ] && echo "$id" >> /tmp/kanban-fases-ids.txt
+    return 0
 }
 
-crear "F1 · Script de edición diaria manual (bash)" <<'TXT'
-Objetivo: un comando que llene el portal de noticias de una vez, lanzado a mano, sin IA.
+# 1º valor alto, coste bajo: el editor publica 20 de un clic.
+crear "1º · Publicación por lotes en el panel (valor alto, coste bajo)" 100 <<'TXT'
+Prioridad: PRIMERA. Es el mayor valor por hora invertida: el editor ya puede
+publicar, pero de una en una. Con 1889 articulos y 19 publicados, esto es lo que
+cambia la portada manana.
 
 Trabajo:
-- scripts/edicion-diaria.sh: recorre las fuentes activas, fuerza la ingesta por la API
-  (X-Api-Key) y deja el recuento por fuente.
-- Selección determinista, sin modelo: piezas con foto, de las últimas 48 h, máximo 2 por
-  fuente y máximo N por sección (N configurable, por defecto 20).
-- Publica lo seleccionado y escribe ediciones/YYYY-MM-DD.md con titular y enlace.
-- Idempotente: dos ejecuciones seguidas no duplican.
-- Log en logs/edicion-YYYY-MM-DD.log; salida != 0 si una fuente falla.
+- Casilla por articulo en la bandeja y "seleccionar todo de la pagina".
+- POST /admin/articulos/publicar-lote (sesion + CSRF), por la maquina de estados
+  existente: nada de saltarse el dominio.
+- Resumen: publicados, omitidos y por que.
+- audit_log con los ids afectados, no solo un contador.
 
-Criterio de aceptación: una ejecución deja la portada con >= 10 noticias con foto y su
-fichero de edición; la segunda no cambia nada. Depende de: nada.
+Aceptacion: 20 borradores -> 20 publicados, la portada los muestra y audit_log
+tiene 20 entradas con el mismo actor. Depende de: nada.
 TXT
 
-crear "F2 · Botón «Ejecutar edición» en el panel administrativo" <<'TXT'
-Objetivo: lanzar la edición desde el panel, sin terminal.
+# 2º valor alto, coste bajo: quitar la terminal de encima.
+crear "2º · Botón «Ejecutar edición» en el panel (valor alto, coste bajo)" 90 <<'TXT'
+Prioridad: SEGUNDA. El script de F1 ya funciona y esta verificado; esto lo pone a
+un clic.
 
 Trabajo:
-- POST /admin/edicion/ejecutar bajo /admin/** (sesión + CSRF) con confirmación.
-- No se usa Runtime.exec sobre un script del repo: se invocan los casos de uso de ingesta
-  y publicación existentes y se guarda el informe.
-- Resultado en la misma página: fuentes consultadas, creadas, publicadas, errores.
-- audit_log con quién lo lanzó. Candado para que no se solapen dos ejecuciones.
+- POST /admin/edicion/ejecutar bajo /admin/** (sesion + CSRF) con confirmacion.
+- No se lanza un script con Runtime.exec: se invocan los casos de uso de ingesta y
+  publicacion y se guarda el informe. Si hiciera falta proceso externo, acotado con
+  timeout y sin shell.
+- Resultado en la misma pagina: fuentes, creadas, borradores, publicadas, errores.
+- audit_log de quien lo lanzo. Candado para que no se solapen dos ejecuciones.
 
-Criterio de aceptación: con sesión de CHIEF el botón publica y deja rastro; sin sesión 302
-y sin CSRF 403. Depende de: F1.
+Aceptacion: con sesion de CHIEF publica y deja rastro; sin sesion 302, sin CSRF 403.
+Depende de: F1 (hecho).
 TXT
 
-crear "F3 · Secciones informativas configurables (Tecnología y Política primero)" <<'TXT'
-Objetivo: que las secciones no sean texto libre en article.section_id, sino una tabla.
+# 3º valor alto, coste medio: es la funcion pedida y prepara la IA.
+crear "3º · Enfoque editorial por sección aplicado al prompt (valor alto, coste medio)" 80 <<'TXT'
+Prioridad: TERCERA. El campo ya existe y se edita; falta que el modelo lo reciba.
+Sin esto, el catalogo de enfoque es un formulario decorativo.
 
 Trabajo:
-- Migración V19: section_config (slug PK, nombre, descripcion, activa, orden,
-  max_piezas_por_edicion, enfoque, auto_publica, created_at, updated_at).
-- Semilla: tecnologia y politica, más las existentes (espana, economia, mundo, deportes,
-  general) para no romper lo publicado.
-- Adaptador cacheado, mismo patrón que DatabaseAiCapabilities (ADR-011).
-- Navegación del portal y desplegable del panel generados desde la tabla.
-- Validación: el section_id de un artículo debe existir en section_config.
+- Componer el prompt: reglas del brief + enfoque de la seccion + texto de la fuente.
+- Guardar en cada articulo con que enfoque y con que version de prompt se escribio
+  (article.editorial_bias ya existe; falta rellenarlo).
+- Etiqueta visible en el portal: cada seccion declara su enfoque (ADR-012).
+- Validacion y audit_log de cada cambio de enfoque.
 
-Criterio de aceptación: añadir una sección en la tabla la hace aparecer en la navegación
-sin recompilar ni reiniciar. Depende de: nada.
+Aceptacion: cambiar el enfoque de tecnologia cambia el texto de la siguiente pieza y
+el articulo guarda con que enfoque se escribio. Depende de: F3 (hecho).
 TXT
 
-crear "F4 · Enfoque editorial por sección, configurable por el editor humano" <<'TXT'
-Objetivo: que el editor defina, por sección, el ángulo con el que se busca y redacta.
+# 4º valor muy alto, coste alto: el diferencial del producto.
+crear "4º · Sección automatizada con IA según su enfoque (valor muy alto, coste alto)" 70 <<'TXT'
+Prioridad: CUARTA. Es el diferencial, pero necesita el enfoque (F4) ya cableado.
 
 Trabajo:
-- Campo enfoque (texto libre con plantilla y ejemplos) en section_config, editable desde
-  /admin/secciones.
-- Se inyecta en el prompt de enriquecido y redacción. Se guarda con cada artículo qué
-  enfoque y qué versión de prompt se usaron, para poder auditar la decisión.
-- Etiqueta visible en el portal: cada sección declara su enfoque editorial. Sin esa
-  transparencia no se implementa.
-- Validación, longitud máxima y audit_log de cada cambio.
+- PUBLISH_AUTO solo en las secciones marcadas auto_publica.
+- Reglas duras: fuente de confianza, seccion permitida, limite diario, sin repetir
+  pieza, ventana 48 h, y que el texto no salga de lo que dice la fuente (ADR-009).
+- Clasificacion real por modelo: hoy el ilike manda casi todo a 'general' y
+  Tecnologia se queda practicamente vacia. Esto lo arregla.
+- Interruptor de emergencia por seccion y global, efectivo sin reiniciar.
+- Marca de automatica en el articulo y en audit_log.
 
-Criterio de aceptación: cambiar el enfoque de tecnologia cambia el texto de la siguiente
-pieza de esa sección y el artículo guarda con qué enfoque se escribió. Depende de: F3.
+Aceptacion: con tecnologia en automatico publica piezas con su angulo y su marca; al
+apagar el interruptor no publica mas. Depende de: F1, F4.
 TXT
 
-crear "F5 · Publicación por lotes en el panel administrativo" <<'TXT'
-Objetivo: publicar 20 noticias en un clic, no en veinte.
+# 5º valor muy alto, coste alto, pero encima de la IA ya montada.
+crear "5º · Generador de noticias desde un tema o titular (valor muy alto, coste alto)" 60 <<'TXT'
+Prioridad: QUINTA. Reutiliza toda la infraestructura de F4 y F6: por eso va despues.
 
 Trabajo:
-- Casilla por artículo en la bandeja, «seleccionar todo de la página» y
-  POST /admin/articulos/publicar-lote (sesión + CSRF).
-- Solo transiciones válidas por la máquina de estados existente.
-- Resumen del resultado: publicados, omitidos y por qué.
-- audit_log por lote con los ids afectados.
+- Entrada: tema o titular + seccion. Busqueda en lo ingestado y en fuentes abiertas.
+- Recopilacion de fragmentos con medio, URL y fecha.
+- Redaccion: solo puede afirmar lo que este en los fragmentos; hereda el enfoque.
+- Verificacion: cada parrafo ligado a sus fuentes; un dato sin fuente se elimina.
+- Salida: DRAFT marcado como generado con IA, con fuentes y prompt aplicado.
+- Menos de 2 fuentes independientes: se aborta y se explica.
+- Pasa por BudgetPort. Nunca publica sola salvo PUBLISH_AUTO en esa seccion.
 
-Criterio de aceptación: seleccionar 20 borradores y publicarlos deja los 20 en PUBLISHED,
-la portada los muestra y audit_log tiene 20 entradas con el mismo actor. Depende de: nada.
+Aceptacion: un tema con cobertura real produce un borrador rastreable; un tema sin
+cobertura no inventa y lo dice. Depende de: F1, F4.
 TXT
 
-crear "F6 · Sección automatizada con IA (buscar, seleccionar y redactar según el enfoque)" <<'TXT'
-Objetivo: que una sección se llene sola respetando el enfoque que definió el editor.
+# 6º valor medio: control y visibilidad, cuando ya hay algo que controlar.
+crear "6º · Panel de estado editorial y control de la edición (valor medio)" 50 <<'TXT'
+Prioridad: SEXTA. Util, pero no desbloquea nada: es visibilidad sobre lo que ya
+funciona. Va al final a proposito.
 
 Trabajo:
-- PUBLISH_AUTO solo en las secciones marcadas auto_publica, no global.
-- Reglas duras antes de publicar: fuente de confianza, sección permitida, límite diario,
-  no repetir pieza, ventana de 48 h, y que el texto no salga de lo que dice la fuente
-  (ADR-009: nunca se envía un borrador propio al proveedor externo).
-- El prompt compone: reglas del brief + enfoque de la sección + texto de la fuente.
-- Interruptor de emergencia por sección y global, efectivo en la siguiente ejecución sin
-  reiniciar (reutiliza AiCapabilities).
-- Toda pieza automática marcada como tal en el artículo y en audit_log.
+- /admin/edicion: ultima ejecucion (cuando, quien, fuentes, creadas, publicadas, errores).
+- Estado por seccion: activa, automatica o manual, enfoque, piezas hoy, cupo restante.
+- Historico de ejecuciones y enlace a la edicion generada.
+- Acciones: ejecutar ahora y activar/desactivar automatico por seccion.
+- Reutiliza el sistema visual del panel.
 
-Criterio de aceptación: con tecnologia en automático, la ejecución diaria publica piezas
-con ese ángulo y su marca; al apagar el interruptor no se publica ninguna más.
-Depende de: F1, F4.
+Aceptacion: tras dos ejecuciones muestra ambas con sus cifras y el estado coincide
+con la BD. Depende de: F2, F5.
 TXT
 
-crear "F7 · Panel: estado editorial y control de la edición" <<'TXT'
-Objetivo: una página /admin/edicion que cuente qué ha pasado y permita corregirlo.
-
-Trabajo:
-- Última ejecución: cuándo, quién, fuentes consultadas, creadas, publicadas, errores.
-- Estado por sección: activa, automática o manual, enfoque, piezas hoy, cupo restante.
-- Histórico de las últimas ejecuciones y enlace a la edición generada.
-- Acciones: ejecutar ahora (F2) y activar/desactivar automático por sección (F6).
-- Reutiliza el sistema visual del panel; enlace en la navegación.
-
-Criterio de aceptación: tras dos ejecuciones la página muestra ambas con sus cifras y el
-estado de cada sección coincide con la BD. Depende de: F2, F5.
-TXT
-
-crear "F8 · Generador de noticias desde un tema o titular (agente IA)" <<'TXT'
-Objetivo: dado un tema o un titular, armar una noticia con lo que digan las fuentes.
-
-Flujo:
-- Búsqueda de los términos contra lo ya ingestado y, opcionalmente, contra feeds
-  adicionales y búsqueda semántica (SEARCH_SEMANTIC).
-- Recopilación de fragmentos con medio, URL y fecha.
-- Redacción: el modelo solo puede afirmar lo que esté en los fragmentos. Hereda el
-  enfoque de la sección elegida (ADR-012).
-- Verificación: cada párrafo ligado a las fuentes que lo sostienen; un dato que no
-  aparece en ninguna fuente se elimina, no se suaviza.
-- Salida: DRAFT marcado como generado con IA, con fuentes usadas y prompt aplicado.
-
-Reglas duras:
-- Nunca publica sola por defecto; solo si PUBLISH_AUTO está activo en esa sección.
-- Menos de 2 fuentes independientes: se aborta y se explica por qué.
-- Marca visible de generado con IA y número de fuentes.
-- Pasa por BudgetPort (coste acotado).
-- Se guardan fuentes, fragmentos, enfoque y versión de prompt.
-
-Criterio de aceptación: un tema con cobertura real produce un borrador rastreable a
-las fuentes listadas; un tema sin cobertura no inventa y dice que no hay material.
-Depende de: F1, F3, F4.
-TXT
+# ---------------------------------------------------------------- hechas
+# Se registran y se completan para que quede el historico en el tablero.
+if [ "$DRY" -eq 0 ]; then
+    for par in \
+        "F1 · Edición diaria manual (HECHO)|Script scripts/edicion-diaria.sh verificado en vivo: 522 items nuevos, 200 borradores, 8 publicadas." \
+        "F3 · Secciones configurables (HECHO)|V19 section_config, modulo section con puertos in/out, /admin/secciones con checkbox y enfoque. Test 6/6." ; do
+        titulo="${par%%|*}"
+        cuerpo="${par#*|}"
+        id=$(printf '%s\n' "$cuerpo" | $K create "$titulo" --parent "$BOARD" --assignee dev-v1 \
+                --created-by dev-v1 --priority 0 --body-file - --json 2>&1 \
+             | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 \
+             | sed 's/.*"\(t_[a-f0-9]*\)"/\1/')
+        if [ -n "${id:-}" ]; then
+            $K complete "$id" >/dev/null 2>&1
+            printf '%-10s %3s  %s (completada)\n' "$id" 0 "$titulo"
+        else
+            printf '%-10s %3s  %s\n' FALLO 0 "$titulo"
+        fi
+    done
+fi
 
 echo
-echo "Listo. Ids en /tmp/kanban-fases-ids.txt"
+echo "Orden: 100 lotes -> 90 boton -> 80 enfoque -> 70 IA -> 60 generador -> 50 panel"
+echo "Ids en /tmp/kanban-fases-ids.txt"

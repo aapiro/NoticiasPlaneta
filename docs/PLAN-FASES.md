@@ -103,6 +103,23 @@ Reglas duras:
 pueden rastrear a las fuentes listadas; dado un tema sin cobertura, no inventa y
 explica que no hay material. Depende de: F1, F3, F4.
 
+## Orden por valor funcional / esfuerzo
+
+Criterio: primero lo que deja resultado visible en horas, después lo que prepara
+la IA, y al final el panel de control, que da visibilidad pero no desbloquea nada.
+
+| Prioridad | Fase | Valor | Coste | Por qué en este puesto |
+|---:|---|---|---|---|
+| 100 | Publicación por lotes (F5) | Alto | Bajo | 20 publicadas de un clic. Es el mayor valor por hora invertida |
+| 90 | Botón «Ejecutar edición» (F2) | Alto | Bajo | El script ya funciona; esto le quita la terminal de encima |
+| 80 | Enfoque aplicado al prompt (F4) | Alto | Medio | Sin esto el catálogo de enfoque es un formulario decorativo |
+| 70 | Sección automatizada con IA (F6) | Muy alto | Alto | El diferencial del producto; necesita F4 cableado |
+| 60 | Generador desde un tema (F8) | Muy alto | Alto | Reutiliza F4 y F6, por eso va después |
+| 50 | Panel de estado editorial (F7) | Medio | Medio | Útil, pero no desbloquea nada |
+
+Hechas: **F1** (edición diaria manual, verificada en vivo) y **F3** (secciones
+configurables con enfoque, test 6/6).
+
 ## Dependencias
 
 ```

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Edición — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Edición</h1>
+    <p class="meta">
+        Qué se publicó, cuándo y con qué cifras. Las cifras son las de la ejecución que las
+        produjo: no se recalculan contando artículos después, porque así no se distingue una
+        ejecución de otra.
+    </p>
+
+    <div class="aviso" th:if="${param.ok}">Guardado.</div>
+    <div class="error" th:if="${param.error == 'en_curso'}">
+        Ya hay una edición en curso. Espera a que termine antes de lanzar otra.
+    </div>
+    <div class="error" th:if="${param.error == 'confirmar'}">
+        Marca la casilla de confirmación: ejecutar la edición publica de verdad.
+    </div>
+    <div class="error" th:if="${param.error == 'permiso'}">
+        Solo CHIEF o ADMIN pueden lanzar una edición.
+    </div>
+    <div class="error" th:if="${param.error == 'seccion'}">No se pudo guardar: sección desconocida.</div>
+    <div class="error" th:if="${param.error == 'ejecucion'}">La edición no se pudo completar.</div>
+    <div class="aviso" th:if="${tablero.ejecucionEnCurso()}">
+        <strong>Hay una edición en curso ahora mismo.</strong> El botón está bloqueado hasta que cierre.
+    </div>
+
+    <h2>Última ejecución</h2>
+    <div th:if="${tablero.ultima() != null}">
+        <div class="kpis">
+            <div class="kpi">
+                <span class="meta">Cuándo</span>
+                <b th:text="${tablero.ultima().iniciada()}">26/11/2026 17:42</b>
+                <span class="meta" th:text="${tablero.ultima().duracionTexto()}">14,5 s</span>
+            </div>
+            <div class="kpi">
+                <span class="meta">Quién</span>
+                <b th:text="${tablero.ultima().actor()}">jefa@noticiasplaneta.com</b>
+                <span class="meta" th:text="'modo ' + ${tablero.ultima().modo()}">modo publicar</span>
+            </div>
+            <div class="kpi">
+                <span class="meta">Fuentes</span>
+                <b th:text="${tablero.ultima().fuentes()}">8</b>
+                <span class="meta"
+                      th:text="${tablero.ultima().fuentesConError()} + ' con error'">0 con error</span>
+            </div>
+            <div class="kpi">
+                <span class="meta">Creadas</span>
+                <b th:text="${tablero.ultima().creadas()}">12</b>
+                <span class="meta" th:text="${tablero.ultima().borradores()} + ' borradores'">12 borradores</span>
+            </div>
+            <div class="kpi">
+                <span class="meta">Publicadas</span>
+                <b th:text="${tablero.ultima().publicadas()}">6</b>
+                <span class="meta">por la máquina de estados</span>
+            </div>
+            <div class="kpi">
+                <span class="meta">Errores</span>
+                <b th:text="${tablero.ultima().errores()}">0</b>
+                <span class="estado" th:classappend="${tablero.ultima().estado()}"
+                      th:text="${tablero.ultima().estado()}">COMPLETADA</span>
+            </div>
+        </div>
+        <p class="meta">
+            <a th:href="@{'/admin/edicion/' + ${tablero.ultima().id()}}">Ver la edición generada</a>
+            ·
+            <a th:href="@{'/admin/edicion/' + ${tablero.ultima().id()} + '/edicion.md'}">Descargar .md</a>
+        </p>
+        <pre class="cuerpo" th:if="${tablero.ultima().detalle()}"
+             th:text="${tablero.ultima().detalle()}"></pre>
+    </div>
+    <p class="meta" th:if="${tablero.ultima() == null}">
+        Todavía no se ha lanzado ninguna edición desde el panel.
+    </p>
+
+    <h2>Ejecutar ahora</h2>
+    <form method="post" th:action="@{/admin/edicion/ejecutar}" class="acciones"
+          th:if="${puedeEjecutar and !tablero.ejecucionEnCurso()}"
+          onsubmit="return confirm('¿Lanzar la edición ahora? Se publicará de verdad.');">
+        <select name="modo" aria-label="Modo de la edición">
+            <option value="publicar">Publicar las piezas</option>
+            <option value="borrador">Solo preparar borradores</option>
+        </select>
+        <label style="display:inline-flex; gap:.4rem; align-items:center; margin:0;">
+            <input type="checkbox" name="confirmo" value="1" required>
+            Confirmo que quiero ejecutar la edición
+        </label>
+        <button type="submit">Ejecutar edición</button>
+    </form>
+    <p class="meta" th:if="${!puedeEjecutar}">
+        Tu cuenta puede mirar el estado, pero no lanzar la edición: eso es de CHIEF o ADMIN.
+    </p>
+
+    <h2>Estado por sección</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Sección</th>
+            <th>Activa</th>
+            <th>Publicación</th>
+            <th>Enfoque</th>
+            <th>Piezas hoy</th>
+            <th>Cupo restante</th>
+            <th>Automático</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${tablero.secciones()}">
+            <td>
+                <strong th:text="${s.nombre()}">Tecnología</strong>
+                <div class="meta" th:text="${s.slug()}">tecnologia</div>
+            </td>
+            <td th:text="${s.activa()} ? 'sí' : 'no'">sí</td>
+            <td>
+                <span class="estado" th:classappend="${s.automatica()} ? 'PUBLISHED' : 'DRAFT'"
+                      th:text="${s.modoTexto()}">manual</span>
+            </td>
+            <td th:text="${s.enfoque()}">NEUTRAL</td>
+            <td th:text="${s.piezasHoy()}">0</td>
+            <td>
+                <span th:text="${s.cupoRestante()}">3</span>
+                <span class="meta" th:text="'de ' + ${s.cupo()}">de 3</span>
+            </td>
+            <td>
+                <form method="post" th:action="@{/admin/edicion/automatico}" class="inline">
+                    <input type="hidden" name="slug" th:value="${s.slug()}">
+                    <input type="checkbox" name="auto" value="1" th:checked="${s.automatica()}"
+                           aria-label="Publicación automática de la sección">
+                    <button type="submit" class="plano">Guardar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="aviso">
+        <strong>«Automática» no publica todavía por sí sola.</strong> La publicación automática
+        es F6 y no existe: aquí se declara la intención y el interruptor queda guardado en la
+        sección. Mientras tanto, nada sale sin que alguien pulse «Ejecutar edición».
+    </div>
+    <p class="meta">
+        «Piezas hoy» cuenta lo publicado desde las 00:00 de Madrid. El cupo es el
+        <code>max_piezas_por_edicion</code> de la sección. Los borradores entran todos en
+        <code>general</code> hasta que la clasificación por IA (F4/F6) esté cableada; el panel
+        enseña ese reparto tal cual, sin maquillarlo.
+    </p>
+
+    <h2>Histórico</h2>
+    <table th:if="${!#lists.isEmpty(tablero.historico())}">
+        <thead>
+        <tr>
+            <th>Iniciada</th>
+            <th>Quién</th>
+            <th>Fuentes</th>
+            <th>Creadas</th>
+            <th>Borradores</th>
+            <th>Publicadas</th>
+            <th>Errores</th>
+            <th>Estado</th>
+            <th>Edición</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="e : ${tablero.historico()}">
+            <td th:text="${e.iniciada()}">26/11/2026 17:42</td>
+            <td th:text="${e.actor()}">jefa@noticiasplaneta.com</td>
+            <td th:text="${e.fuentes()}">8</td>
+            <td th:text="${e.creadas()}">12</td>
+            <td th:text="${e.borradores()}">12</td>
+            <td th:text="${e.publicadas()}">6</td>
+            <td th:text="${e.errores()}">0</td>
+            <td>
+                <span class="estado" th:classappend="${e.estado()}" th:text="${e.estado()}">COMPLETADA</span>
+            </td>
+            <td><a th:href="@{'/admin/edicion/' + ${e.id()}}">Ver</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="meta" th:if="${#lists.isEmpty(tablero.historico())}">
+        Sin ejecuciones todavía. La primera que lances aparecerá aquí con sus cifras.
+    </p>
+
+    <p class="meta">Portal con <strong th:text="${tablero.totalPublicadas()}">19</strong> piezas publicadas.</p>
+</main>
+</body>
+</html>

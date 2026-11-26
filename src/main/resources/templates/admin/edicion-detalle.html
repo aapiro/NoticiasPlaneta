@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Edición — Panel', ~{::main})}">
+<body>
+<main>
+    <p class="meta"><a th:href="@{/admin/edicion}">← Volver a Edición</a></p>
+    <h1>Edición del <span th:text="${detalle.ejecucion().iniciada()}">26/11/2026 17:42</span></h1>
+
+    <div class="acciones">
+        <span class="estado" th:classappend="${detalle.ejecucion().estado()}"
+              th:text="${detalle.ejecucion().estado()}">COMPLETADA</span>
+        <span class="chip" th:text="'modo ' + ${detalle.ejecucion().modo()}">modo publicar</span>
+        <span class="chip" th:text="${detalle.ejecucion().duracionTexto()}">14,5 s</span>
+        <a class="chip" th:href="@{'/admin/edicion/' + ${detalle.ejecucion().id()} + '/edicion.md'}">Descargar .md</a>
+    </div>
+
+    <div class="kpis">
+        <div class="kpi">
+            <span class="meta">Fuentes</span>
+            <b th:text="${detalle.ejecucion().fuentes()}">8</b>
+            <span class="meta" th:text="${detalle.ejecucion().fuentesConError()} + ' con error'">0 con error</span>
+        </div>
+        <div class="kpi">
+            <span class="meta">Creadas</span>
+            <b th:text="${detalle.ejecucion().creadas()}">12</b>
+            <span class="meta" th:text="${detalle.ejecucion().borradores()} + ' borradores'">12 borradores</span>
+        </div>
+        <div class="kpi">
+            <span class="meta">Publicadas</span>
+            <b th:text="${detalle.ejecucion().publicadas()}">6</b>
+        </div>
+        <div class="kpi">
+            <span class="meta">Errores</span>
+            <b th:text="${detalle.ejecucion().errores()}">0</b>
+        </div>
+    </div>
+
+    <p class="meta">
+        Lanzada por <span th:text="${detalle.ejecucion().actor()}">jefa@noticiasplaneta.com</span>,
+        cerrada a las <span th:text="${detalle.ejecucion().terminada()}">17:42</span>.
+    </p>
+
+    <h2>Incidencias</h2>
+    <pre class="cuerpo" th:if="${detalle.ejecucion().detalle()}"
+         th:text="${detalle.ejecucion().detalle()}"></pre>
+    <p class="meta" th:if="${detalle.ejecucion().detalle() == null}">Ninguna: la ejecución cerró limpia.</p>
+
+    <h2>Piezas de esta edición</h2>
+    <table th:if="${!#lists.isEmpty(detalle.piezas())}">
+        <thead>
+        <tr>
+            <th>Sección</th>
+            <th>Titular</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${detalle.piezas()}">
+            <td th:text="${p.sectionId()}">politica</td>
+            <td th:text="${p.titulo()}">Titular</td>
+            <td><a th:href="@{${p.url()}}">Abrir en el panel</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="meta" th:if="${#lists.isEmpty(detalle.piezas())}">
+        Esta ejecución no metió ninguna pieza: no había borradores con foto dentro de la ventana.
+    </p>
+</main>
+</body>
+</html>

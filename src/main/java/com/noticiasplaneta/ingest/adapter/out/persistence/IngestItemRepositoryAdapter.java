@@ -81,11 +81,16 @@ class IngestItemRepositoryAdapter implements IngestItemRepository {
         return e;
     }
 
-    /** Reconstruye el item desde persistencia (usado por tests de integración). */
+    /**
+     * Reconstruye el item desde persistencia conservando su id.
+     *
+     * <p>Antes usaba {@code receive()}, que genera un id nuevo: cualquier lectura devolvía
+     * una identidad que no existía en la base.
+     */
     IngestItem toDomain(IngestItemJpaEntity e) {
-        return IngestItem.receive(new SourceId(e.sourceId),
-                new com.noticiasplaneta.ingest.domain.FeedEntry(
-                        e.externalId, e.title, e.body, e.canonicalUrl, e.publishedAt, e.author, e.imageUrl));
+        return IngestItem.rehydrate(new IngestItemId(e.id), new SourceId(e.sourceId),
+                e.externalId, new ContentHash(e.contentHash), e.title, e.body,
+                e.canonicalUrl, e.publishedAt, e.author, e.imageUrl);
     }
 
     IngestItemId idOf(IngestItemJpaEntity e) {

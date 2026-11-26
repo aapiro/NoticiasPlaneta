@@ -52,4 +52,35 @@ public class IngestQueriesService implements GetIngestItemUseCase, IngestAllSour
         }
         return done;
     }
+
+    @Override
+    public InformeFuentes runDetailed() {
+        // DEGRADED es un aviso, no una baja: se sigue intentando. DISABLED no se toca.
+        java.util.List<Source> fuentes = new java.util.ArrayList<>(sources.findByState(SourceState.ACTIVE));
+        fuentes.addAll(sources.findByState(SourceState.DEGRADED));
+
+        java.util.List<FuenteIngesta> informe = new java.util.ArrayList<>();
+        int creadas = 0;
+        int errores = 0;
+
+        for (Source source : fuentes) {
+            String id = source.id().value().toString();
+            try {
+                var report = ingestSource.run(source.id());
+                creadas += report.created();
+                if (report.error() == null) {
+                    informe.add(new FuenteIngesta(id, source.name(), report.created(), null));
+                } else {
+                    errores++;
+                    informe.add(new FuenteIngesta(id, source.name(), 0, report.error()));
+                }
+            } catch (RuntimeException e) {
+                errores++;
+                log.warn("Ingesta fallida para {}: {}", source.name(), e.getMessage());
+                informe.add(new FuenteIngesta(id, source.name(), 0,
+                        e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+            }
+        }
+        return new InformeFuentes(informe, creadas, errores);
+    }
 }

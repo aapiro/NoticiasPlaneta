@@ -60,6 +60,9 @@ security:
 ai:
   deepseek:
     api-key: ${DEEPSEEK_API_KEY:}
+    # Endpoint configurable: cualquier API compatible con OpenAI sirve (incluido un
+    # modelo autoalojado). Lo usa la clasificación de F6.
+    endpoint: ${DEEPSEEK_ENDPOINT:https://api.deepseek.com/chat/completions}
   budget:
     daily-micros: ${AI_DAILY_BUDGET_MICROS:5000000}
   worker:
@@ -90,3 +93,19 @@ outbox:
 
 news:
   default-section: general
+
+# F6 · publicación automática. La pasada clasifica y publica; el interruptor de verdad
+# está en la tabla de capacidades (PUBLISH_AUTO) y en section_config.auto_publica.
+autopublish:
+  scheduler:
+    enabled: ${AUTOPUBLISH_SCHEDULER:true}
+    delay-ms: ${AUTOPUBLISH_DELAY_MS:300000}
+    initial-delay-ms: 45000
+  batch-size: ${AUTOPUBLISH_BATCH:10}
+
+# F7 · reglas de la edición que lanza el panel. Los mismos valores que
+# scripts/edicion-diaria.sh (EDICION_VENTANA_HORAS, EDICION_LIMITE, EDICION_MAX_POR_FUENTE).
+edicion:
+  ventana-horas: ${EDICION_VENTANA_HORAS:48}
+  limite: ${EDICION_LIMITE:20}
+  max-por-fuente: ${EDICION_MAX_POR_FUENTE:3}

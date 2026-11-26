@@ -117,10 +117,19 @@ la IA, y al final el panel de control, que da visibilidad pero no desbloquea nad
 | 60 | Generador desde un tema (F8) | Muy alto | Alto | Reutiliza F4 y F6, por eso va después |
 | 50 | Panel de estado editorial (F7) | Medio | Medio | Útil, pero no desbloquea nada |
 
-Hechas: **F1** (edición diaria manual, verificada en vivo), **F3** (secciones
-configurables con enfoque, test 6/6) y **F5** (publicación por lotes en la bandeja,
-ADR-013: 20 borradores → 20 publicados y 20 asientos de auditoría en el test de
-aceptación).
+Hechas: **F1** (edición diaria manual, verificada en vivo), **F2** (botón «Ejecutar
+edición» en el panel: con sesión de CHIEF publica por la máquina de estados y deja
+rastro en `audit_log`, sin sesión 302, sin CSRF 403 y con candado contra solapes;
+6/6 de aceptación, ejecutado sobre el módulo `edicion` que entrega F7), **F3**
+(secciones configurables con enfoque, test 6/6), **F5** (publicación por lotes en la
+bandeja, ADR-013: 20 borradores → 20 publicados y 20 asientos de auditoría en el test
+de aceptación) y **F7** (`/admin/edicion`: última ejecución, estado por sección con
+piezas de hoy y cupo restante, histórico con enlace a la edición generada, ejecutar
+ahora y automático por sección; 10/10 de aceptación, ver ADR-014).
+
+Límite conocido de F2: la ejecución guarda fuentes, creadas, borradores, publicadas y
+errores —con el nombre de cada fuente que falló—, pero no el desglose de piezas creadas
+por fuente: `IngestAllSourcesUseCase.runDetailed()` lo devuelve y se descarta al cerrar.
 
 ## Dependencias
 

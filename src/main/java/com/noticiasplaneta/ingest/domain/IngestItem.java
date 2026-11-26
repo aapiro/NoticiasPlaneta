@@ -81,6 +81,22 @@ public final class IngestItem {
     }
 
     /**
+     * Reconstruye un item ya persistido conservando su identidad.
+     *
+     * <p>{@link #receive} genera un id nuevo; usarlo al leer de la base devuelve un id que
+     * no existe. Cualquier lectura de persistencia tiene que pasar por aquí.
+     */
+    public static IngestItem rehydrate(IngestItemId id, SourceId sourceId, String externalId,
+                                       ContentHash contentHash, String title, String body,
+                                       String canonicalUrl, Instant publishedAt, String author,
+                                       String imageUrl) {
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(sourceId, "sourceId");
+        return new IngestItem(id, sourceId, externalId, contentHash, title, body,
+                canonicalUrl, publishedAt, author, imageUrl);
+    }
+
+    /**
      * Solo se acepta una URL http/https razonable. Una imagen rota o un
      * {@code javascript:} colado por el feed no debe llegar a la portada.
      */

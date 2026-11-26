@@ -139,6 +139,13 @@ ADMIN_TOTP_SECRET=BASE32...        # secreto TOTP (RFC 6238)
 | `/admin/login` | email + contraseña + TOTP en un solo paso |
 | `/admin` | bandeja con filtros por estado, sección y texto |
 | `/admin/articulos/{id}` | editor, transiciones permitidas, auditoría y retirada |
+| `/admin/edicion` | última ejecución con sus cifras, estado por sección, histórico y botón para lanzar la edición |
+| `/admin/secciones` | secciones configurables, enfoque editorial y cupo |
+| `/admin/capacidades` | modos de las capacidades de IA |
+
+La ejecución de la edición desde `/admin/edicion` va **en proceso y por la máquina de
+estados** (ADR-014): publica con eventos de dominio y `audit_log`, no con `update`. Su
+informe vive en `edicion_ejecucion` y cada pieza queda ligada a la ejecución que la publicó.
 
 El panel **no reimplementa reglas**: llama a los mismos casos de uso que la API, y las
 transiciones que ofrece salen del dominio. La autenticación es provisional (ADR-010):

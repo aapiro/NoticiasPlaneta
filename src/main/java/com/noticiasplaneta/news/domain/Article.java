@@ -133,6 +133,26 @@ public final class Article {
         this.scheduledAt = publishAt;
     }
 
+    /**
+     * F5: publica ya, recorriendo la máquina de estados en lugar de inventar una arista
+     * DRAFT → PUBLISHED.
+     *
+     * <p>Cada paso se autoriza con {@link TransitionPolicy}, así que un borrador sigue
+     * pasando por revisión, aprobación y programación antes de salir. La acción es una sola
+     * para el editor (y una sola entrada de auditoría), pero el estado no se escribe a mano.
+     * Devuelve el estado de partida.
+     */
+    public ArticleState publishNow(Actor actor, Instant now) {
+        TransitionPolicy.assertCanPublishNow(actor, this.state, this.sectionId);
+        ArticleState previous = this.state;
+        for (ArticleState step : this.state.pathTo(ArticleState.PUBLISHED)) {
+            transitionTo(step, actor, now);
+        }
+        // se publica ahora: no queda una programación residual en scheduled_at
+        this.scheduledAt = null;
+        return previous;
+    }
+
     public void rename(String newTitle) {
         if (newTitle == null || newTitle.isBlank()) {
             throw new DomainException("ARTICLE_TITLE_REQUIRED", "El artículo necesita título");

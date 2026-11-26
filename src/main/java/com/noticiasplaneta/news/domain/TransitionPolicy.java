@@ -49,4 +49,33 @@ public final class TransitionPolicy {
             throw new DomainException("FORBIDDEN", "Solo CHIEF o ADMIN pueden archivar");
         }
     }
+
+    /** Quién puede publicar, sin mirar el estado: lo usa el lote antes de empezar. */
+    public static void assertCanPublish(Actor actor) {
+        if (actor.isAgent()) {
+            throw new DomainException("AGENT_CANNOT_PUBLISH", "Un agente no puede publicar");
+        }
+        if (!actor.hasAnyRole("CHIEF", "ADMIN")) {
+            throw new DomainException("FORBIDDEN", "Solo CHIEF o ADMIN pueden publicar");
+        }
+    }
+
+    /**
+     * Publicación inmediata (F5, por lotes) desde cualquier estado del que la máquina
+     * llegue a PUBLISHED. No se salta el dominio: el camino se calcula con
+     * {@link ArticleState#pathTo} y cada arista se vuelve a autorizar en el agregado.
+     */
+    public static void assertCanPublishNow(Actor actor, ArticleState from, String sectionId) {
+        assertCanPublish(actor);
+        if (from == ArticleState.PUBLISHED) {
+            throw new DomainException("ALREADY_PUBLISHED", "El artículo ya está publicado");
+        }
+        if (from.isTerminal()) {
+            throw new DomainException("ARTICLE_ARCHIVED", "Un artículo archivado no se publica");
+        }
+        if (from.pathTo(ArticleState.PUBLISHED).isEmpty()) {
+            throw new DomainException("NOT_PUBLISHABLE",
+                    "Desde %s no se llega a PUBLISHED por la máquina de estados".formatted(from));
+        }
+    }
 }

@@ -4,6 +4,37 @@
 <main>
     <h1>Bandeja</h1>
 
+    <div class="error" th:if="${error}" th:text="${error}">error</div>
+    <div class="error" th:if="${errorLote}" th:text="${errorLote}">error</div>
+
+    <section class="resumen" th:if="${resumenLote != null}" aria-live="polite">
+        <p>
+            <strong th:text="${#lists.size(resumenLote.published())} + ' publicados'">0 publicados</strong>
+            <span th:if="${not #lists.isEmpty(resumenLote.skipped())}"
+                  th:text="' · ' + ${#lists.size(resumenLote.skipped())} + ' omitidos'">· 0 omitidos</span>
+            <span class="meta" th:text="'de ' + ${resumenLote.requested()} + ' seleccionados'">de 0 seleccionados</span>
+        </p>
+
+        <details th:if="${not #lists.isEmpty(resumenLote.published())}">
+            <summary th:text="'Publicados (' + ${#lists.size(resumenLote.published())} + ')'">Publicados</summary>
+            <ul>
+                <li th:each="p : ${resumenLote.published()}">
+                    <a th:href="@{/admin/articulos/{id}(id=${p.id()})}" th:text="${p.title()}">titular</a>
+                </li>
+            </ul>
+        </details>
+
+        <div th:if="${not #lists.isEmpty(resumenLote.skipped())}">
+            <p class="meta" style="margin:.6rem 0 0">Omitidos, con el motivo:</p>
+            <ul>
+                <li th:each="s : ${resumenLote.skipped()}">
+                    <span th:text="${s.title() != null ? s.title() : s.id()}">titular</span>
+                    <span class="meta" th:text="' — ' + ${s.reason()}">motivo</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
     <nav class="chips" aria-label="Filtrar por estado">
         <a class="chip" th:href="@{/admin}" th:aria-current="${estado == null}">
             Todos <span th:text="${contadores.getOrDefault('_', 0) == 0 ? '' : ''}"></span>
@@ -22,20 +53,46 @@
 
     <p class="meta" th:if="${#lists.isEmpty(articulos)}">No hay artículos con estos filtros.</p>
 
-    <table th:unless="${#lists.isEmpty(articulos)}">
-        <thead>
-        <tr><th>Titular</th><th>Sección</th><th>Estado</th><th>Origen</th><th>Creado</th></tr>
-        </thead>
-        <tbody>
-        <tr th:each="a : ${articulos}">
-            <td><a th:href="@{/admin/articulos/{id}(id=${a.id()})}" th:text="${a.title()}">Titular</a></td>
-            <td class="meta" th:text="${a.sectionId()}">seccion</td>
-            <td><span class="estado" th:classappend="${a.state()}" th:text="${a.state()}">DRAFT</span></td>
-            <td class="meta" th:text="${a.origin()}">INGEST</td>
-            <td class="meta" th:text="${a.createdLabel()}">fecha</td>
-        </tr>
-        </tbody>
-    </table>
+    <form class="lote" method="post" th:action="@{/admin/articulos/publicar-lote}"
+          th:unless="${#lists.isEmpty(articulos)}">
+        <input type="hidden" name="estado" th:value="${estado}">
+        <input type="hidden" name="seccion" th:value="${seccion}">
+        <input type="hidden" name="q" th:value="${q}">
+
+        <div class="lote__barra">
+            <button type="submit">Publicar seleccionados</button>
+            <label for="todos">
+                <input type="checkbox" id="todos" name="todos" value="pagina">
+                Seleccionar todo de la página
+            </label>
+            <span class="meta" th:text="'Máximo ' + ${topeLote} + ' por lote.'">Máximo 100 por lote.</span>
+        </div>
+
+        <table>
+            <thead>
+            <tr><th aria-label="Seleccionar"></th><th>Titular</th><th>Sección</th><th>Estado</th>
+                <th>Origen</th><th>Creado</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${articulos}">
+                <td><input type="checkbox" name="ids" th:value="${a.id()}" th:id="'sel-' + ${a.id()}"
+                           th:attr="aria-label='Seleccionar ' + ${a.title()}"></td>
+                <td><a th:href="@{/admin/articulos/{id}(id=${a.id()})}" th:text="${a.title()}">Titular</a></td>
+                <td class="meta" th:text="${a.sectionId()}">seccion</td>
+                <td><span class="estado" th:classappend="${a.state()}" th:text="${a.state()}">DRAFT</span></td>
+                <td class="meta" th:text="${a.origin()}">INGEST</td>
+                <td class="meta" th:text="${a.createdLabel()}">fecha</td>
+            </tr>
+            </tbody>
+        </table>
+    </form>
+
+    <script>
+        // Sin JS el lote sigue funcionando: «toda la página» lo recalcula el servidor.
+        document.getElementById('todos')?.addEventListener('change', (e) => {
+            document.querySelectorAll('input[name="ids"]').forEach((c) => { c.checked = e.target.checked; });
+        });
+    </script>
 </main>
 </body>
 </html>

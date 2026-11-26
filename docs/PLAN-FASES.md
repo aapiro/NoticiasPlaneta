@@ -117,8 +117,10 @@ la IA, y al final el panel de control, que da visibilidad pero no desbloquea nad
 | 60 | Generador desde un tema (F8) | Muy alto | Alto | Reutiliza F4 y F6, por eso va después |
 | 50 | Panel de estado editorial (F7) | Medio | Medio | Útil, pero no desbloquea nada |
 
-Hechas: **F1** (edición diaria manual, verificada en vivo) y **F3** (secciones
-configurables con enfoque, test 6/6).
+Hechas: **F1** (edición diaria manual, verificada en vivo), **F3** (secciones
+configurables con enfoque, test 6/6) y **F5** (publicación por lotes en la bandeja,
+ADR-013: 20 borradores → 20 publicados y 20 asientos de auditoría en el test de
+aceptación).
 
 ## Dependencias
 

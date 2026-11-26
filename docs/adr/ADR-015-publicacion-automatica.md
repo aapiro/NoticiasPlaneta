@@ -80,9 +80,10 @@ registrada en `article_auto_classification`. Si el proveedor no está configurad
 `ilike` del script la hubiera dejado ya en Tecnología. No hay fallback a `ilike` ni a "la
 sección que ya tenía", porque eso es exactamente el defecto que esta fase corrige.
 
-Comprobado en vivo: con la clave vacía y Tecnología en automático sobre una copia de la
-base real (158 candidatos), la pasada termina con
-`clasificadas=0 publicadas=0 notas=[clasificacion_detenida:AI_NOT_CONFIGURED]`.
+Comprobado en el test de aceptación (`sinProveedorNoPublica`): con el modelo devolviendo
+`AI_NOT_CONFIGURED`, una pieza que el `ilike` dejó en Tecnología **no** se publica. En la
+primera pasada en vivo sin clave apareció justo el fallo contrario —una pieza colocada por
+el `ilike` se publicó con `modelo=sin-clasificar`— y de ahí nace esta regla.
 
 ## Consecuencias
 

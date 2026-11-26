@@ -23,9 +23,10 @@ class JdbcArticleQueryAdapter implements ArticleQueryRepository {
     public List<PublishedArticle> findPublished(String sectionId, int limit) {
         String sql = """
                 select a.id, a.slug, a.section_id, a.title, a.correction_note, a.published_at,
-                       i.image_url
+                       i.image_url, (ap.article_id is not null) as automatica
                 from article a
                 left join ingest_item i on i.id::text = a.ingest_item_id
+                left join article_auto_publicacion ap on ap.article_id = a.id
                 where a.state = 'PUBLISHED'
                   and (?::text is null or a.section_id = ?)
                 order by a.published_at desc nulls last
@@ -45,7 +46,7 @@ class JdbcArticleQueryAdapter implements ArticleQueryRepository {
                 rs.getString("id"), rs.getString("slug"), rs.getString("section_id"),
                 rs.getString("title"), rs.getString("correction_note"), instant,
                 instant == null ? "" : LABEL.format(instant),
-                rs.getString("image_url"));
+                rs.getString("image_url"), rs.getBoolean("automatica"));
     }
 
     @Override
@@ -71,9 +72,10 @@ class JdbcArticleQueryAdapter implements ArticleQueryRepository {
     public Optional<PublishedArticle> findPublishedBySectionAndSlug(String sectionId, String slug) {
         String sql = """
                 select a.id, a.slug, a.section_id, a.title, a.correction_note, a.published_at,
-                       i.image_url
+                       i.image_url, (ap.article_id is not null) as automatica
                 from article a
                 left join ingest_item i on i.id::text = a.ingest_item_id
+                left join article_auto_publicacion ap on ap.article_id = a.id
                 where a.state = 'PUBLISHED' and a.section_id = ? and a.slug = ?
                 """;
         return jdbc.query(sql, (rs, n) -> map(rs), sectionId, slug).stream().findFirst();

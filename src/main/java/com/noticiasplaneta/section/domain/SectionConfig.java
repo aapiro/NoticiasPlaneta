@@ -10,6 +10,7 @@ package com.noticiasplaneta.section.domain;
  * @param maxPiezas cupo máximo de piezas por edición
  * @param enfoque   línea editorial declarada, visible en el portal (ADR-012)
  * @param autoPublica si puede publicar sin intervención humana (F6)
+ * @param autoLimiteDiario cupo diario de la publicación automática (F6); 0 = ninguna
  */
 public record SectionConfig(
         String slug,
@@ -19,5 +20,6 @@ public record SectionConfig(
         int orden,
         int maxPiezas,
         EditorialBias enfoque,
-        boolean autoPublica) {
+        boolean autoPublica,
+        int autoLimiteDiario) {
 }

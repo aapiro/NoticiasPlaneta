@@ -96,7 +96,13 @@ select gen_random_uuid(), 'es',
          else 'general'
        end,
        'INGEST', i.id::text,
-       left(regexp_replace(lower(i.title), '[^a-z0-9]+', '-', 'g'), 55) || '-' || left(i.id::text, 8),
+       -- slug valido: sin guiones de sobra ni al final (el agregado lo rechaza y la
+       -- lectura de la pieza daba 500); el sufijo del id garantiza unicidad.
+       trim(both '-' from left(
+           coalesce(
+               nullif(trim(both '-' from regexp_replace(lower(i.title), '[^a-z0-9]+', '-', 'g')), ''),
+               'noticia'),
+           60)) || '-' || left(i.id::text, 8),
        i.title, left(coalesce(i.body, ''), 20000), 'DRAFT',
        coalesce(i.published_at, i.created_at)
 from ingest_item i

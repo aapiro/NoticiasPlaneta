@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: page('Publicación automática — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Publicación automática</h1>
+    <p class="meta">
+        Una sección marcada como automática publica sola piezas de <strong>fuentes de confianza</strong>
+        dentro de las últimas 48 h, sin repetir titulares y con cupo diario. La clasificación la hace
+        el modelo (ya no un <code>ilike</code>). Todo lo publicado así lleva marca de automática en el
+        artículo y en <code>audit_log</code>.
+    </p>
+
+    <div class="aviso" th:if="${param.ok}">
+        Hecho:
+        <strong th:text="${param.ok}"></strong>
+        <span th:if="${param.estado}">
+            · pasada <span th:text="${param.estado}"></span>,
+            <span th:text="${param.clasificadas}">0</span> clasificadas,
+            <span th:text="${param.publicadas}">0</span> publicadas
+        </span>
+    </div>
+    <div class="error" th:if="${param.error}">No se pudo guardar (<span th:text="${param.error}"></span>).</div>
+
+    <h2>Interruptor global</h2>
+    <p>
+        Estado:
+        <span class="estado" th:classappend="${globalOn} ? 'PUBLISHED' : 'ARCHIVED'"
+              th:text="${globalOn} ? 'encendido' : 'apagado'">apagado</span>
+        <span class="meta">— capacidad <code>PUBLISH_AUTO</code>; se aplica en la siguiente pasada, sin reiniciar.</span>
+    </p>
+    <form method="post" th:action="@{/admin/autopublicacion/global}" class="inline">
+        <input type="hidden" name="activo" th:value="${!globalOn}">
+        <button type="submit" class="plano"
+                th:text="${globalOn} ? 'Apagar la publicación automática' : 'Encender la publicación automática'">
+            Encender
+        </button>
+    </form>
+    <p class="meta" th:if="${!globalOn}">
+        Encender usa modo <strong>EXTERNAL</strong> (DeepSeek). Sin clave de proveedor la pasada no
+        clasifica y no publica nada: falla cerrado a propósito.
+    </p>
+
+    <h2>Última pasada</h2>
+    <p class="meta" th:if="${ultima.at().epochSecond == 0}">Todavía no se ha ejecutado ninguna pasada.</p>
+    <table th:if="${ultima.at().epochSecond > 0}">
+        <tbody>
+        <tr><th>Cuándo</th><td th:text="${ultima.at()}"></td></tr>
+        <tr><th>Resultado</th><td th:text="${ultima.outcome()}"></td></tr>
+        <tr><th>Clasificadas</th><td th:text="${ultima.classified()}"></td></tr>
+        <tr><th>Publicadas</th><td th:text="${ultima.published()}"></td></tr>
+        <tr><th>Descartadas</th><td th:text="${ultima.skipped()}"></td></tr>
+        <tr><th>Notas</th><td th:text="${#strings.listJoin(ultima.notes(), ' · ')}"></td></tr>
+        </tbody>
+    </table>
+
+    <form method="post" th:action="@{/admin/autopublicacion/ejecutar}" class="inline">
+        <button type="submit" class="plano">Ejecutar una pasada ahora</button>
+    </form>
+
+    <h2>Por sección</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Sección</th>
+            <th>Automática</th>
+            <th>Enfoque</th>
+            <th>Hoy</th>
+            <th>Cupo diario</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${secciones}">
+            <td>
+                <strong th:text="${s.nombre()}">Tecnología</strong>
+                <div class="meta" th:text="${s.slug() + (s.activa() ? '' : ' · inactiva')}"></div>
+            </td>
+            <td>
+                <span class="estado" th:classappend="${s.autoPublica()} ? 'PUBLISHED' : 'ARCHIVED'"
+                      th:text="${s.autoPublica()} ? 'sí' : 'no'">no</span>
+            </td>
+            <td th:text="${s.enfoque()}">NEUTRAL</td>
+            <td th:text="${s.publicadasHoy()}">0</td>
+            <td>
+                <form method="post" th:action="@{/admin/autopublicacion/limite}" class="inline">
+                    <input type="hidden" name="slug" th:value="${s.slug()}">
+                    <input type="number" name="limite" min="0" max="24" th:value="${s.limiteDiario()}"
+                           aria-label="Cupo diario" style="width:5rem">
+                    <button type="submit" class="plano">Guardar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="meta">
+        El interruptor por sección es <strong>«Automática»</strong> en
+        <a th:href="@{/admin/secciones}">Secciones</a>. Cupo 0 equivale a apagada.
+    </p>
+
+    <h2>Fuentes de confianza</h2>
+    <p class="meta">
+        Sin fuentes marcadas aquí, la automatización no publica nada. Marcadas por defecto: ninguna.
+    </p>
+    <table>
+        <thead>
+        <tr>
+            <th>Fuente</th>
+            <th>Estado</th>
+            <th>Fallos</th>
+            <th>Confianza</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="f : ${fuentes}">
+            <td><strong th:text="${f.name()}">El País</strong></td>
+            <td th:text="${f.state()}">ACTIVE</td>
+            <td th:text="${f.failureCount()}">0</td>
+            <td>
+                <form method="post" th:action="@{/admin/autopublicacion/fuente}" class="inline">
+                    <input type="hidden" name="id" th:value="${f.id()}">
+                    <input type="checkbox" name="confianza" value="1" th:checked="${f.trusted()}"
+                           aria-label="Fuente de confianza">
+                    <button type="submit" class="plano">Guardar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="aviso">
+        <strong>Reglas duras</strong> (no configurables desde el panel): ventana de 48 h sobre la
+        fecha de la noticia, fuente de confianza y no deshabilitada, sección activa y en automático,
+        cupo diario, sin repetir un titular ya publicado en 7 días, solo piezas de origen
+        <code>INGEST</code> y <strong>sin reescribir titular ni cuerpo</strong> (ADR-009): el portal
+        publica lo que dice la fuente, no lo que inventa un modelo.
+    </div>
+</main>
+</body>
+</html>

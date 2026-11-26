@@ -23,7 +23,7 @@ class SectionAdminService implements SectionAdminUseCase {
         return sections.findAll().stream()
                 .map(s -> new SectionView(s.slug(), s.nombre(), s.descripcion(),
                         s.activa(), s.orden(), s.maxPiezas(),
-                        s.enfoque().name(), s.autoPublica()))
+                        s.enfoque().name(), s.autoPublica(), s.autoLimiteDiario()))
                 .toList();
     }
 
@@ -35,25 +35,37 @@ class SectionAdminService implements SectionAdminUseCase {
     @Override
     public boolean setActive(String slug, boolean activa) {
         return mutate(slug, s -> new SectionConfig(s.slug(), s.nombre(), s.descripcion(),
-                activa, s.orden(), s.maxPiezas(), s.enfoque(), s.autoPublica()));
+                activa, s.orden(), s.maxPiezas(), s.enfoque(), s.autoPublica(), s.autoLimiteDiario()));
     }
 
     @Override
     public boolean setBias(String slug, String bias) {
         return mutate(slug, s -> new SectionConfig(s.slug(), s.nombre(), s.descripcion(),
-                s.activa(), s.orden(), s.maxPiezas(), EditorialBias.parse(bias), s.autoPublica()));
+                s.activa(), s.orden(), s.maxPiezas(), EditorialBias.parse(bias), s.autoPublica(),
+                s.autoLimiteDiario()));
     }
 
     @Override
     public boolean setAutoPublica(String slug, boolean autoPublica) {
         return mutate(slug, s -> new SectionConfig(s.slug(), s.nombre(), s.descripcion(),
-                s.activa(), s.orden(), s.maxPiezas(), s.enfoque(), autoPublica));
+                s.activa(), s.orden(), s.maxPiezas(), s.enfoque(), autoPublica, s.autoLimiteDiario()));
+    }
+
+    /** F6: cupo diario de la automatización. 0 apaga la publicación automática de esa sección. */
+    @Override
+    public boolean setAutoLimite(String slug, int limiteDiario) {
+        if (limiteDiario < 0 || limiteDiario > 24) {
+            return false;
+        }
+        return mutate(slug, s -> new SectionConfig(s.slug(), s.nombre(), s.descripcion(),
+                s.activa(), s.orden(), s.maxPiezas(), s.enfoque(), s.autoPublica(), limiteDiario));
     }
 
     @Override
     public boolean update(String slug, boolean activa, String bias, boolean autoPublica) {
         return mutate(slug, s -> new SectionConfig(s.slug(), s.nombre(), s.descripcion(),
-                activa, s.orden(), s.maxPiezas(), EditorialBias.parse(bias), autoPublica));
+                activa, s.orden(), s.maxPiezas(), EditorialBias.parse(bias), autoPublica,
+                s.autoLimiteDiario()));
     }
 
     private boolean mutate(String slug, java.util.function.UnaryOperator<SectionConfig> change) {

@@ -21,11 +21,14 @@ public interface SectionAdminUseCase {
 
     boolean setAutoPublica(String slug, boolean autoPublica);
 
+    /** Cupo diario de la automatización (F6). 0 = esa sección no publica sola. */
+    boolean setAutoLimite(String slug, int limiteDiario);
+
     /** Guarda de una vez los tres campos editables de la fila del panel. */
     boolean update(String slug, boolean activa, String bias, boolean autoPublica);
 
     record SectionView(String slug, String nombre, String descripcion,
                        boolean activa, int orden, int maxPiezas,
-                       String enfoque, boolean autoPublica) {
+                       String enfoque, boolean autoPublica, int autoLimiteDiario) {
     }
 }

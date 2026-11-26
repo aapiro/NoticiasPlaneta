@@ -5,6 +5,10 @@
 <main>
     <div class="cuerpo-articulo">
         <span class="chip vivo" th:text="${articulo.sectionId()}">seccion</span>
+        <span class="chip" th:if="${articulo.automatica()}"
+              title="Clasificada y publicada por el sistema a partir de una fuente de confianza">
+            Publicación automática
+        </span>
 
         <h1 th:text="${articulo.title()}">Titular</h1>
 

@@ -105,7 +105,7 @@ class ArticleRepositoryAdapter implements ArticleRepository {
     private Article toDomain(ArticleJpaEntity e) {
         return Article.rehydrate(
                 new ArticleId(e.id), e.language, e.sectionId, e.origin, e.ingestItemId,
-                new Slug(e.slug), e.title, e.body, e.state, e.revisionCount,
+                Slug.persisted(e.slug), e.title, e.body, e.state, e.revisionCount,
                 e.publishedAt, e.scheduledAt, e.createdAt,
                 e.unpublishedAt, e.unpublishReason, e.correctionNote);
     }

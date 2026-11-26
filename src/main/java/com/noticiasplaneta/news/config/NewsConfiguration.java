@@ -1,6 +1,9 @@
 package com.noticiasplaneta.news.config;
 
 import com.noticiasplaneta.news.application.port.in.CreateDraftFromItemUseCase;
+import com.noticiasplaneta.news.application.port.in.AutoPublishUseCase;
+import com.noticiasplaneta.news.application.port.out.AutoPublishStore;
+import com.noticiasplaneta.news.application.service.AutoPublishArticleService;
 import com.noticiasplaneta.news.application.port.in.TransitionArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.GetArticleTextUseCase;
 import com.noticiasplaneta.news.application.port.in.ListArticlesUseCase;
@@ -123,5 +126,14 @@ class NewsConfiguration {
     PublishScheduledUseCase publishScheduledUseCase(ArticleRepository articles, AuditPort audit,
                                                     EventPublisher events, OutboxPort outbox) {
         return new PublishScheduledService(articles, audit, events, outbox);
+    }
+
+    /** F6 · camino de escritura de la publicación automática. */
+    @Bean
+    AutoPublishUseCase autoPublishUseCase(ArticleRepository articles, AutoPublishStore store,
+                                          AuditPort audit, EventPublisher events, OutboxPort outbox,
+                                          org.springframework.transaction.PlatformTransactionManager tx) {
+        return new AutoPublishArticleService(articles, store, audit, events, outbox,
+                new org.springframework.transaction.support.TransactionTemplate(tx));
     }
 }

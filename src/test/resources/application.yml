@@ -13,3 +13,7 @@ publish:
 outbox:
   relay:
     enabled: false
+
+autopublish:
+  scheduler:
+    enabled: false

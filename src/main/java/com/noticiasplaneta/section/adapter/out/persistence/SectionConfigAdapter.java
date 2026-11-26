@@ -50,6 +50,7 @@ class SectionConfigAdapter implements SectionConfigRepository {
         entity.maxPiezas = config.maxPiezas();
         entity.enfoque = config.enfoque().name();
         entity.autoPublica = config.autoPublica();
+        entity.autoLimiteDiario = config.autoLimiteDiario();
         entity.actualizadaEn = Instant.now();
         jpa.save(entity);
     }
@@ -57,6 +58,6 @@ class SectionConfigAdapter implements SectionConfigRepository {
     private static SectionConfig toDomain(SectionConfigJpaEntity e) {
         return new SectionConfig(
                 e.slug, e.nombre, e.descripcion, e.activa, e.orden, e.maxPiezas,
-                EditorialBias.parse(e.enfoque), e.autoPublica);
+                EditorialBias.parse(e.enfoque), e.autoPublica, e.autoLimiteDiario);
     }
 }

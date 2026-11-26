@@ -36,6 +36,9 @@ class SectionConfigJpaEntity {
     @Column(name = "auto_publica", nullable = false)
     boolean autoPublica;
 
+    @Column(name = "auto_limite_diario", nullable = false)
+    int autoLimiteDiario;
+
     @Column(name = "actualizada_en", nullable = false)
     Instant actualizadaEn;
 

@@ -1,6 +1,15 @@
 package com.noticiasplaneta.ai.config;
 
 import com.noticiasplaneta.ai.application.port.in.EnrichArticleUseCase;
+import com.noticiasplaneta.ai.application.port.in.ClassifyArticleUseCase;
+import com.noticiasplaneta.ai.application.port.in.PublishAutoGate;
+import com.noticiasplaneta.ai.application.port.out.ClassificationPort;
+import com.noticiasplaneta.ai.application.service.ClassifyArticleService;
+import com.noticiasplaneta.ai.adapter.out.llm.DeepSeekClassificationAdapter;
+import com.noticiasplaneta.ai.adapter.out.llm.UnconfiguredClassificationAdapter;
+import com.noticiasplaneta.ai.domain.AiCapability;
+import org.springframework.beans.factory.annotation.Value;
+import tools.jackson.databind.ObjectMapper;
 import com.noticiasplaneta.ai.application.port.out.AiJobRepository;
 import com.noticiasplaneta.ai.application.port.out.BudgetPort;
 import com.noticiasplaneta.ai.application.port.out.EnrichmentPort;
@@ -58,5 +67,33 @@ class AiConfiguration {
                                               StoreArticleEmbeddingUseCase storeEmbedding) {
         return new EnrichArticleService(jobs, enrichments, enricher, embeddings, budget,
                 articleText, storeEmbedding);
+    }
+
+    /**
+     * Clasificación editorial (F6).
+     *
+     * <p>Un solo bean: si hay clave se usa DeepSeek; si no, el adaptador que falla con
+     * {@code AI_NOT_CONFIGURED}. Un único bean evita la ambigüedad de tener dos puertos
+     * del mismo tipo según el orden del escaneo.
+     */
+    @Bean
+    ClassificationPort classificationPort(
+            @Value("${ai.deepseek.api-key:}") String apiKey,
+            @Value("${ai.deepseek.endpoint:https://api.deepseek.com/chat/completions}") String endpoint,
+            ObjectMapper json) {
+        return apiKey == null || apiKey.isBlank()
+                ? new UnconfiguredClassificationAdapter()
+                : new DeepSeekClassificationAdapter(apiKey, json, endpoint);
+    }
+
+    @Bean
+    ClassifyArticleUseCase classifyArticleUseCase(ClassificationPort classifier, BudgetPort budget) {
+        return new ClassifyArticleService(classifier, budget);
+    }
+
+    /** Botón de emergencia global: la capacidad PUBLISH_AUTO de la tabla de capacidades. */
+    @Bean
+    PublishAutoGate publishAutoGate(AiCapabilities capabilities) {
+        return () -> capabilities.isOn(AiCapability.PUBLISH_AUTO);
     }
 }

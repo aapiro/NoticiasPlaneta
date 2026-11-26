@@ -17,7 +17,7 @@ public final class Article {
 
     private final ArticleId id;
     private final String language;
-    private final String sectionId;
+    private String sectionId;
     private final ArticleOrigin origin;
     private final String ingestItemId;
     private Slug slug;
@@ -189,6 +189,44 @@ public final class Article {
 
     public void assignSlug(Slug slug) {
         this.slug = Objects.requireNonNull(slug, "slug");
+    }
+
+    /**
+     * F6 — mueve un borrador a otra sección.
+     *
+     * <p>Solo se reclasifica lo que aún no se ha publicado: la URL canónica
+     * ({@code /seccion/slug}) dejaría de resolver si cambiara la sección de una pieza viva.
+     */
+    public void assignSection(String newSectionId) {
+        if (newSectionId == null || newSectionId.isBlank()) {
+            throw new DomainException("ARTICLE_SECTION_REQUIRED", "El artículo necesita sección");
+        }
+        if (this.state != ArticleState.DRAFT) {
+            throw new DomainException("SECTION_CHANGE_NOT_DRAFT",
+                    "Solo se reclasifica un borrador; este artículo está en " + this.state);
+        }
+        this.sectionId = newSectionId.trim();
+    }
+
+    /**
+     * F6 — publica sin intervención humana.
+     *
+     * <p>Reutiliza {@link #publishNow} para no tener dos formas de llegar a publicado: el
+     * camino automático recorre la misma máquina de estados, solo que el actor es SYSTEM
+     * y nadie revisa por el camino. Las condiciones propias de la automatización son las
+     * de aquí: solo un borrador y solo pieza de fuente pública (ADR-009). No toca titular
+     * ni cuerpo: la máquina no reescribe la fuente.
+     */
+    public void publishAutomatically(Instant now) {
+        if (this.state != ArticleState.DRAFT) {
+            throw new DomainException("AUTO_PUBLISH_ONLY_DRAFT",
+                    "La publicación automática solo parte de un borrador (estado " + this.state + ")");
+        }
+        if (this.origin != ArticleOrigin.INGEST || this.ingestItemId == null || this.ingestItemId.isBlank()) {
+            throw new DomainException("AUTO_PUBLISH_SOURCE_REQUIRED",
+                    "Solo se publica sola una pieza de fuente pública (ADR-009)");
+        }
+        publishNow(Actor.system(), now);
     }
 
     public ArticleId id() { return id; }

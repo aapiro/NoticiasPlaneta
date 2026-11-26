@@ -1,6 +1,10 @@
 package com.noticiasplaneta.ingest.config;
 
 import com.noticiasplaneta.ingest.application.port.in.AddSourceUseCase;
+import com.noticiasplaneta.ingest.application.port.in.SourceTrustUseCase;
+import com.noticiasplaneta.ingest.application.port.out.SourceTrustRepository;
+import com.noticiasplaneta.ingest.application.service.SourceTrustService;
+import com.noticiasplaneta.shared.domain.AuditPort;
 import com.noticiasplaneta.ingest.application.service.IngestQueriesService;
 import com.noticiasplaneta.ingest.application.port.in.IngestSourceUseCase;
 import com.noticiasplaneta.ingest.application.port.out.ExecutionLock;
@@ -43,6 +47,12 @@ class IngestConfiguration {
                                               IngestItemRepository items,
                                               IngestSourceUseCase ingestSource) {
         return new IngestQueriesService(sources, items, ingestSource);
+    }
+
+    /** F6 · fuentes de confianza para la publicación automática. */
+    @Bean
+    SourceTrustUseCase sourceTrustUseCase(SourceTrustRepository sources, AuditPort audit, Clock clock) {
+        return new SourceTrustService(sources, audit, clock);
     }
 
 }

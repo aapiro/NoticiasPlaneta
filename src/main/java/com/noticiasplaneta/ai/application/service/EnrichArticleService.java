@@ -27,8 +27,13 @@ public class EnrichArticleService implements EnrichArticleUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(EnrichArticleService.class);
     static final String TYPE = "enrich";
-    /** Estimación conservadora por pieza; el coste real se registra después. */
-    static final long ESTIMATED_COST_MICROS = 50_000;
+    /**
+     * Coste estimado por pieza (ADR-017). Medido contra DeepSeek con el cuerpo completo:
+     * 7.076 caracteres (p90 de la base real) = 1,53 milésimas de dólar en hora punta y sin
+     * caché; 26.241 caracteres (p99) llega a 3,45 porque el modelo razona y esos tokens se
+     * pagan como salida. 4.000 cubre el p99 con margen.
+     */
+    static final long ESTIMATED_COST_MICROS = 4_000;
 
     private final AiJobRepository jobs;
     private final EnrichmentRepository enrichments;

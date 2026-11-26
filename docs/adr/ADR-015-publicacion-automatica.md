@@ -112,18 +112,19 @@ el `ilike` se publicó con `modelo=sin-clasificar`— y de ahí nace esta regla.
   (`@MockitoBean`) cubren el mecanismo y la llamada HTTP tiene su test con un servidor
   local. La calidad del prompt solo se puede medir con clave.
 - `deepseek-chat` es el modelo que usa el clasificador. El adaptador de enriquecido usa
-  `deepseek-flash`, que no está en el catálogo público de DeepSeek; no se toca aquí
-  porque es de otra fase.
+  `deepseek-flash`, que es el modelo principal del catálogo actual; verificado el
+  26/11/2026, `deepseek-chat` responde como `deepseek-flash` (ADR-017).
 - La caché de capacidades (`DatabaseAiCapabilities`) se recarga cuando **el panel** escribe
   el modo, no cuando alguien cambia `feature_flag` por SQL a mano. Con una sola instancia
   es lo que se espera; en multi-instancia haría falta TTL o notificación (ADR-011 ya lo
   dejaba abierto). Los interruptores de sección y la marca de confianza de fuentes **sí**
   se leen de base en cada pasada.
-- **Defecto preexistente que afecta al coste (no corregido aquí):** `InMemoryBudgetAdapter`
-  llama "diario" a un presupuesto que **no se reinicia** al cambiar el día: el contador
-  solo vuelve a cero al reiniciar la app. Con `AI_DAILY_BUDGET_MICROS=5.000.000` y la
-  estimación de 20.000 micros por clasificación, la automatización deja de clasificar tras
-  ~250 piezas hasta el siguiente reinicio. Está anotado como tarjeta aparte.
+- **Defecto preexistente ya corregido (ADR-017):** `InMemoryBudgetAdapter` llamaba
+  "diario" a un presupuesto que **no se reiniciaba** al cambiar el día: el contador solo
+  volvía a cero al reiniciar la app. Ahora el día natural de Madrid se guarda junto al
+  gasto y el contador vuelve a cero sin reiniciar. Las estimaciones de coste también se
+  midieron contra el proveedor: 150 µ$ por clasificación y 4.000 µ$ por enriquecido, en
+  lugar de los 20.000 y 50.000 que había (ADR-017).
 
 ## Cómo se verifica
 

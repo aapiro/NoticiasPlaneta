@@ -64,7 +64,10 @@ ai:
     # modelo autoalojado). Lo usa la clasificación de F6.
     endpoint: ${DEEPSEEK_ENDPOINT:https://api.deepseek.com/chat/completions}
   budget:
+    # Presupuesto diario en microdólares ($1 = 1.000.000). Se cuenta por día natural de
+    # `zone` y vuelve a cero al cambiar el día, sin reiniciar (ADR-017).
     daily-micros: ${AI_DAILY_BUDGET_MICROS:5000000}
+    zone: ${AI_BUDGET_ZONE:Europe/Madrid}
   worker:
     delay-ms: 30000
 

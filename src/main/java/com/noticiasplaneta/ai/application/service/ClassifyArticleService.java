@@ -22,8 +22,12 @@ public class ClassifyArticleService implements ClassifyArticleUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ClassifyArticleService.class);
 
-    /** Coste estimado de clasificar un titular; el presupuesto diario es el techo real. */
-    static final long ESTIMATED_COST_MICROS = 20_000;
+    /**
+     * Coste estimado de clasificar un titular (ADR-017). Medido contra DeepSeek con el
+     * prompt real: 184 tokens de entrada y 17 de salida = 75,6 microdólares en hora punta
+     * y sin caché; 150 deja margen para titulares y catálogos más largos.
+     */
+    static final long ESTIMATED_COST_MICROS = 150;
 
     /** Por debajo de esto el modelo no se cree su propia respuesta. */
     static final double MIN_CONFIDENCE = 0.55;

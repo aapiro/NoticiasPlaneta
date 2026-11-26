@@ -29,8 +29,6 @@ public class DeepSeekClassificationAdapter implements ClassificationPort {
 
     static final String PROMPT_VERSION = "classify-v1";
     static final String MODEL = "deepseek-chat";
-    /** Coste estimado por clasificación; el real lo acota el presupuesto diario. */
-    private static final long COST_MICROS = 500;
 
     private static final String SYSTEM = """
             Eres un clasificador editorial de un periodico en espanol.

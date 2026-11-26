@@ -136,5 +136,30 @@ Criterio de aceptación: tras dos ejecuciones la página muestra ambas con sus c
 estado de cada sección coincide con la BD. Depende de: F2, F5.
 TXT
 
+crear "F8 · Generador de noticias desde un tema o titular (agente IA)" <<'TXT'
+Objetivo: dado un tema o un titular, armar una noticia con lo que digan las fuentes.
+
+Flujo:
+- Búsqueda de los términos contra lo ya ingestado y, opcionalmente, contra feeds
+  adicionales y búsqueda semántica (SEARCH_SEMANTIC).
+- Recopilación de fragmentos con medio, URL y fecha.
+- Redacción: el modelo solo puede afirmar lo que esté en los fragmentos. Hereda el
+  enfoque de la sección elegida (ADR-012).
+- Verificación: cada párrafo ligado a las fuentes que lo sostienen; un dato que no
+  aparece en ninguna fuente se elimina, no se suaviza.
+- Salida: DRAFT marcado como generado con IA, con fuentes usadas y prompt aplicado.
+
+Reglas duras:
+- Nunca publica sola por defecto; solo si PUBLISH_AUTO está activo en esa sección.
+- Menos de 2 fuentes independientes: se aborta y se explica por qué.
+- Marca visible de generado con IA y número de fuentes.
+- Pasa por BudgetPort (coste acotado).
+- Se guardan fuentes, fragmentos, enfoque y versión de prompt.
+
+Criterio de aceptación: un tema con cobertura real produce un borrador rastreable a
+las fuentes listadas; un tema sin cobertura no inventa y dice que no hay material.
+Depende de: F1, F3, F4.
+TXT
+
 echo
 echo "Listo. Ids en /tmp/kanban-fases-ids.txt"

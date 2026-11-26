@@ -8,3 +8,6 @@ target/
 
 # CA local de Caddy (no versionar)
 .certs/
+
+# logs de la edicion diaria (efimeros)
+logs/

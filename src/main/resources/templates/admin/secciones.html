@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Secciones — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Secciones</h1>
+    <p class="meta">
+        Las secciones activas aparecen en el portal. El enfoque editorial se declara al lector
+        en cada sección (ADR-012) y condiciona cómo se busca y redacta.
+    </p>
+
+    <div class="aviso" th:if="${param.ok}">Guardado: <strong th:text="${param.ok}"></strong></div>
+    <div class="error" th:if="${param.error}">No se pudo guardar: sección desconocida.</div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Activa</th>
+            <th>Sección</th>
+            <th>Enfoque</th>
+            <th>Automática</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${secciones}">
+            <td>
+                <form method="post" th:action="@{/admin/secciones}" th:id="'f-' + ${s.slug()}" class="inline">
+                    <input type="hidden" name="slug" th:value="${s.slug()}">
+                    <input type="checkbox" name="activa" value="1" th:checked="${s.activa()}"
+                           aria-label="Sección activa">
+                </form>
+            </td>
+            <td>
+                <strong th:text="${s.nombre()}">Tecnología</strong>
+                <div class="meta" th:text="${s.slug() + ' · orden ' + s.orden() + ' · cupo ' + s.maxPiezas()}"></div>
+            </td>
+            <td>
+                <select name="enfoque" th:form="'f-' + ${s.slug()}" aria-label="Enfoque editorial">
+                    <option th:each="e : ${enfoques}" th:value="${e}" th:text="${e}"
+                            th:selected="${e == s.enfoque()}">NEUTRAL</option>
+                </select>
+            </td>
+            <td>
+                <input type="checkbox" name="auto" value="1" th:checked="${s.autoPublica()}"
+                       th:form="'f-' + ${s.slug()}"
+                       aria-label="Puede publicar sin intervención">
+            </td>
+            <td>
+                <button type="submit" class="plano" th:form="'f-' + ${s.slug()}">Guardar</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Qué significa cada enfoque</h2>
+    <ul class="meta">
+        <li><strong>NEUTRAL</strong> — sin línea declarada; se informa sin ángulo.</li>
+        <li><strong>IZQUIERDA</strong> / <strong>DERECHA</strong> — línea declarada al lector.</li>
+        <li><strong>CENTRO</strong> — se busca el contraste entre posiciones.</li>
+    </ul>
+
+    <div class="aviso">
+        El enfoque decide qué se elige y cómo se explica. <strong>Nunca</strong> autoriza a inventar,
+        a omitir un dato que la fuente da ni a atribuir declaraciones. Y la etiqueta se muestra
+        al lector: sin eso no se guarda.
+    </div>
+</main>
+</body>
+</html>

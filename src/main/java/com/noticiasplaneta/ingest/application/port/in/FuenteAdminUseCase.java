@@ -22,6 +22,21 @@ public interface FuenteAdminUseCase {
 
     boolean desactivar(String id);
 
+    /** Cambia nombre y feed. @return {@code false} si la fuente no existe */
+    boolean editar(String id, String nombre, String feedUrl);
+
+    /**
+     * Borra la fuente si no tiene piezas. Si las tiene, se desactiva para no perder
+     * el rastro de noticias ya ingeridas.
+     */
+    Borrado eliminar(String id);
+
+    enum Borrado {
+        BORRADA,
+        DESACTIVADA_TENIA_PIEZAS,
+        NO_EXISTE
+    }
+
     /** Degradaciones y recuperaciones recientes, de la auditoría. */
     List<Aviso> historial(int limite);
 

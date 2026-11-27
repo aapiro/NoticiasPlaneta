@@ -16,4 +16,10 @@ public interface SourceRepository {
     Optional<Source> findById(SourceId id);
 
     List<Source> findByState(SourceState state);
+
+    /** Borrado real. Solo debe llamarse cuando la fuente no tiene piezas asociadas. */
+    void delete(SourceId id);
+
+    /** Cuántas piezas de ingesta cuelgan de esta fuente. */
+    long countItems(SourceId id);
 }

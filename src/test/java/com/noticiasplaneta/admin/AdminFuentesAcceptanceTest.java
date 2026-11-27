@@ -102,6 +102,17 @@ class AdminFuentesAcceptanceTest {
         return jdbc.queryForObject("select id::text from source where name = ?", String.class, nombre);
     }
 
+    /** Fuente propia de cada test: compartir las sembradas hace que se pisen entre sí. */
+    private String crearFuente(String nombre) {
+        String id = UUID.randomUUID().toString();
+        String slug = nombre.toLowerCase().replace(' ', '-');
+        jdbc.update("""
+                insert into source (id, name, feed_url, state, failure_count, confianza)
+                values (?::uuid, ?, ?, 'ACTIVE', 0, false)""",
+                id, nombre, "https://ejemplo.com/" + slug + "/rss");
+        return id;
+    }
+
     private String estadoDe(String nombre) {
         return jdbc.queryForObject("select state from source where name = ?", String.class, nombre);
     }
@@ -159,16 +170,17 @@ class AdminFuentesAcceptanceTest {
     @Test
     @DisplayName("Reactivar deja la fuente en ACTIVE con los fallos a cero")
     void reactivar() throws Exception {
-        String id = idDe("ABC");
+        String id = crearFuente("ABC reactivar");
         jdbc.update("update source set state = 'DISABLED', failure_count = 4 where id = ?::uuid", id);
 
         mvc.perform(post("/admin/fuentes/" + id + "/estado").session(sesion).with(csrf())
                         .param("accion", "activar"))
                 .andExpect(redirectedUrl("/admin/fuentes?ok=activar"));
 
-        assertThat(estadoDe("ABC")).isEqualTo("ACTIVE");
         assertThat(jdbc.queryForObject(
-                "select failure_count from source where name = 'ABC'", Integer.class))
+                "select state from source where id = ?::uuid", String.class, id)).isEqualTo("ACTIVE");
+        assertThat(jdbc.queryForObject(
+                "select failure_count from source where id = ?::uuid", Integer.class, id))
                 .as("reactivar con los fallos viejos la degradaría al primer error")
                 .isZero();
     }
@@ -186,5 +198,112 @@ class AdminFuentesAcceptanceTest {
                         .param("nombre", "Sin CSRF")
                         .param("feedUrl", "https://ejemplo.com/rss"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Editar cambia nombre y feed")
+    void editar() throws Exception {
+        String id = crearFuente("ABC editar");
+
+        mvc.perform(post("/admin/fuentes/" + id + "/editar").session(sesion).with(csrf())
+                        .param("nombre", "ABC España")
+                        .param("feedUrl", "https://www.abc.es/rss/2.0/espana/"))
+                .andExpect(redirectedUrl("/admin/fuentes?ok=editada"));
+
+        assertThat(jdbc.queryForObject("select name from source where id = ?::uuid", String.class, id))
+                .isEqualTo("ABC España");
+        assertThat(jdbc.queryForObject("select feed_url from source where id = ?::uuid", String.class, id))
+                .isEqualTo("https://www.abc.es/rss/2.0/espana/");
+    }
+
+    @Test
+    @DisplayName("Cambiar la URL tira el ETag viejo: si no, el feed nuevo contesta 304 para siempre")
+    void editarUrlLimpiaValidadores() throws Exception {
+        String id = crearFuente("ABC validadores");
+        jdbc.update("update source set etag = 'W/\"viejo\"', last_modified = 'ayer', failure_count = 3 "
+                + "where id = ?::uuid", id);
+
+        mvc.perform(post("/admin/fuentes/" + id + "/editar").session(sesion).with(csrf())
+                        .param("nombre", "ABC")
+                        .param("feedUrl", "https://www.abc.es/rss/2.0/otra/"))
+                .andExpect(redirectedUrl("/admin/fuentes?ok=editada"));
+
+        assertThat(jdbc.queryForObject("select etag from source where id = ?::uuid", String.class, id))
+                .as("un If-None-Match del feed anterior no vale para el nuevo")
+                .isNull();
+        assertThat(jdbc.queryForObject(
+                "select failure_count from source where id = ?::uuid", Integer.class, id)).isZero();
+    }
+
+    @Test
+    @DisplayName("Editar con una URL que no es http/https la rechaza el dominio")
+    void editarUrlInvalida() throws Exception {
+        String id = crearFuente("ABC invalida");
+
+        mvc.perform(post("/admin/fuentes/" + id + "/editar").session(sesion).with(csrf())
+                        .param("nombre", "ABC")
+                        .param("feedUrl", "ftp://no.es.un.feed"))
+                .andExpect(redirectedUrl("/admin/fuentes?error=SOURCE_URL_INVALID"));
+
+        assertThat(jdbc.queryForObject("select feed_url from source where id = ?::uuid", String.class, id))
+                .as("no debe quedar tocada")
+                .isEqualTo("https://ejemplo.com/abc-invalida/rss");
+    }
+
+    @Test
+    @DisplayName("Eliminar una fuente sin piezas la borra de verdad")
+    void eliminarSinPiezas() throws Exception {
+        String id = crearFuente("ABC borrar");
+
+        mvc.perform(post("/admin/fuentes/" + id + "/eliminar").session(sesion)
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/admin/fuentes?ok=borrada"));
+
+        assertThat(jdbc.queryForObject(
+                "select count(*) from source where id = ?::uuid", Integer.class, id)).isZero();
+    }
+
+    @Test
+    @DisplayName("Eliminar una fuente con noticias dentro la desactiva, no la borra")
+    void eliminarConPiezasDesactiva() throws Exception {
+        String id = crearFuente("Pais con piezas");
+        // Una pieza de ingesta cuelga de esta fuente: borrarla perdería el origen.
+        jdbc.update("""
+                insert into ingest_item (id, source_id, external_id, content_hash, title, body,
+                                         canonical_url, published_at, created_at)
+                values (gen_random_uuid(), ?::uuid, 'ext-1', 'hash-1', 'Titular', 'cuerpo',
+                        'https://ejemplo.com/1', now(), now())""", id);
+
+        mvc.perform(post("/admin/fuentes/" + id + "/eliminar").session(sesion)
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/admin/fuentes?ok=desactivada-con-piezas"));
+
+        assertThat(jdbc.queryForObject(
+                "select count(*) from source where id = ?::uuid", Integer.class, id))
+                .as("la fuente sigue ahí")
+                .isEqualTo(1);
+        assertThat(jdbc.queryForObject("select state from source where id = ?::uuid", String.class, id))
+                .isEqualTo("DISABLED");
+        assertThat(jdbc.queryForObject(
+                "select count(*) from ingest_item where source_id = ?::uuid", Integer.class, id))
+                .as("la noticia ya ingerida no se toca")
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Eliminar con un id que no es uuid no revienta")
+    void eliminarIdInvalido() throws Exception {
+        mvc.perform(post("/admin/fuentes/no-es-un-uuid/eliminar").session(sesion).with(csrf()))
+                .andExpect(redirectedUrl("/admin/fuentes?error=NO_EXISTE"));
+    }
+
+    @Test
+    @DisplayName("Sin sesión no se puede borrar")
+    void borrarSinSesion() throws Exception {
+        String id = crearFuente("ABC sin sesion");
+        mvc.perform(post("/admin/fuentes/" + id + "/eliminar").with(csrf()))
+                .andExpect(status().is3xxRedirection());
+        assertThat(jdbc.queryForObject("select count(*) from source where id = ?::uuid", Integer.class, id))
+                .isEqualTo(1);
     }
 }

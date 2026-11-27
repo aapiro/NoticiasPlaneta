@@ -26,9 +26,8 @@
             <th></th>
         </tr>
         </thead>
-        <tbody>
-        <tr th:each="f : ${fuentes}">
-            <td>
+        <tbody th:each="f : ${fuentes}">
+        <tr>            <td>
                 <strong th:text="${f.nombre()}">Medio</strong>
                 <span class="sello" th:if="${f.confianza()}">de confianza</span>
             </td>
@@ -44,6 +43,29 @@
                     <input type="hidden" name="accion" th:value="${f.activa() ? 'desactivar' : 'activar'}">
                     <button type="submit" th:text="${f.activa() ? 'Desactivar' : 'Activar'}">Desactivar</button>
                 </form>
+            </td>
+        </tr>
+        <tr class="fila-edicion">
+            <td colspan="6">
+                <details>
+                    <summary>Editar o eliminar <span th:text="${f.nombre()}">Medio</span></summary>
+                    <div class="panel-fila">
+                        <form method="post" th:action="@{'/admin/fuentes/' + ${f.id()} + '/editar'}" class="alta">
+                            <label>Nombre
+                                <input type="text" name="nombre" required maxlength="120" th:value="${f.nombre()}">
+                            </label>
+                            <label>URL del feed
+                                <input type="url" name="feedUrl" required th:value="${f.url()}">
+                            </label>
+                            <button type="submit">Guardar cambios</button>
+                        </form>
+                        <form method="post" th:action="@{'/admin/fuentes/' + ${f.id()} + '/eliminar'}"
+                              class="inline borrar"
+                              onsubmit="return confirm('¿Eliminar esta fuente? Si ya tiene noticias dentro, se desactivará en vez de borrarse.');">
+                            <button type="submit" class="peligro">Eliminar fuente</button>
+                        </form>
+                    </div>
+                </details>
             </td>
         </tr>
         </tbody>

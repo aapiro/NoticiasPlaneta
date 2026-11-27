@@ -55,4 +55,29 @@ class AdminFuentesController {
                 ? "redirect:/admin/fuentes?ok=" + accion
                 : "redirect:/admin/fuentes?error=NO_EXISTE";
     }
+
+    @PostMapping("/admin/fuentes/{id}/editar")
+    String editar(@PathVariable String id,
+                  @RequestParam("nombre") String nombre,
+                  @RequestParam("feedUrl") String feedUrl) {
+        try {
+            return fuentes.editar(id, nombre, feedUrl)
+                    ? "redirect:/admin/fuentes?ok=editada"
+                    : "redirect:/admin/fuentes?error=NO_EXISTE";
+        } catch (DomainException e) {
+            return "redirect:/admin/fuentes?error=" + e.code();
+        } catch (DataIntegrityViolationException e) {
+            // El índice único solo cubre las activas: el choque es con otra que ya existe.
+            return "redirect:/admin/fuentes?error=URL_DUPLICADA";
+        }
+    }
+
+    @PostMapping("/admin/fuentes/{id}/eliminar")
+    String eliminar(@PathVariable String id) {
+        return switch (fuentes.eliminar(id)) {
+            case BORRADA -> "redirect:/admin/fuentes?ok=borrada";
+            case DESACTIVADA_TENIA_PIEZAS -> "redirect:/admin/fuentes?ok=desactivada-con-piezas";
+            case NO_EXISTE -> "redirect:/admin/fuentes?error=NO_EXISTE";
+        };
+    }
 }

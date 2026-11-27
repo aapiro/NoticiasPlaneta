@@ -50,6 +50,36 @@ class FuenteAdminService implements FuenteAdminUseCase {
 
     @Override
     @Transactional
+    public boolean editar(String id, String nombre, String feedUrl) {
+        return cambiar(id, source -> source.editar(nombre, feedUrl));
+    }
+
+    @Override
+    @Transactional
+    public Borrado eliminar(String id) {
+        UUID uuid = uuid(id);
+        if (uuid == null) return Borrado.NO_EXISTE;
+
+        SourceId sourceId = new SourceId(uuid);
+        var source = sources.findById(sourceId);
+        if (source.isEmpty()) return Borrado.NO_EXISTE;
+
+        // Con piezas dentro no se borra: `ingest_item` tiene FK a `source`, y las
+        // noticias ya ingeridas perderían su origen. Se desactiva, que deja de leerse
+        // igual y conserva el rastro.
+        if (sources.countItems(sourceId) > 0) {
+            Source existente = source.get();
+            existente.disable();
+            sources.save(existente);
+            return Borrado.DESACTIVADA_TENIA_PIEZAS;
+        }
+
+        sources.delete(sourceId);
+        return Borrado.BORRADA;
+    }
+
+    @Override
+    @Transactional
     public boolean activar(String id) {
         return cambiar(id, Source::enable);
     }
@@ -60,13 +90,17 @@ class FuenteAdminService implements FuenteAdminUseCase {
         return cambiar(id, Source::disable);
     }
 
-    private boolean cambiar(String id, java.util.function.Consumer<Source> cambio) {
-        UUID uuid;
+    private static UUID uuid(String id) {
         try {
-            uuid = UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
-            return false;
+            return UUID.fromString(id);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return null;
         }
+    }
+
+    private boolean cambiar(String id, java.util.function.Consumer<Source> cambio) {
+        UUID uuid = uuid(id);
+        if (uuid == null) return false;
         return sources.findById(new SourceId(uuid))
                 .map(source -> {
                     cambio.accept(source);

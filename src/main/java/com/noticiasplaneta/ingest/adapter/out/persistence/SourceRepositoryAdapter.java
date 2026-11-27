@@ -4,6 +4,7 @@ import com.noticiasplaneta.ingest.application.port.out.SourceRepository;
 import com.noticiasplaneta.ingest.domain.Source;
 import com.noticiasplaneta.ingest.domain.SourceId;
 import com.noticiasplaneta.ingest.domain.SourceState;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +15,25 @@ import java.util.Optional;
 class SourceRepositoryAdapter implements SourceRepository {
 
     private final SpringDataSourceRepository jpa;
+    private final JdbcTemplate jdbc;
 
-    SourceRepositoryAdapter(SpringDataSourceRepository jpa) {
+    SourceRepositoryAdapter(SpringDataSourceRepository jpa, JdbcTemplate jdbc) {
         this.jpa = jpa;
+        this.jdbc = jdbc;
+    }
+
+    @Override
+    @Transactional
+    public void delete(SourceId id) {
+        jpa.deleteById(id.value());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countItems(SourceId id) {
+        Long n = jdbc.queryForObject(
+                "select count(*) from ingest_item where source_id = ?", Long.class, id.value());
+        return n == null ? 0 : n;
     }
 
     @Override

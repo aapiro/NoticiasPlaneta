@@ -16,8 +16,8 @@ public final class Source {
     public static final int DEGRADE_THRESHOLD = 5;
 
     private final SourceId id;
-    private final String name;
-    private final String feedUrl;
+    private String name;
+    private String feedUrl;
     private SourceState state;
     private int failureCount;
     private Instant lastCheckedAt;
@@ -37,13 +37,44 @@ public final class Source {
     }
 
     public static Source register(String name, String feedUrl) {
+        validarNombre(name);
+        validarUrl(feedUrl);
+        return new Source(SourceId.newId(), name.trim(), feedUrl.trim(), SourceState.ACTIVE, 0, null, null, null);
+    }
+
+    /**
+     * Cambia el nombre y la URL del feed.
+     *
+     * <p>Si la URL cambia, se tiran los validadores HTTP del feed anterior. Sin eso el
+     * servidor nuevo contesta 304 a un {@code If-None-Match} que no es suyo y la fuente
+     * se queda en «no ha cambiado» para siempre: parece sana y no ingiere nada.
+     */
+    public void editar(String nuevoNombre, String nuevaFeedUrl) {
+        validarNombre(nuevoNombre);
+        validarUrl(nuevaFeedUrl);
+        boolean cambiaUrl = !this.feedUrl.equals(nuevaFeedUrl.trim());
+        this.name = nuevoNombre.trim();
+        this.feedUrl = nuevaFeedUrl.trim();
+        if (cambiaUrl) {
+            this.etag = null;
+            this.lastModified = null;
+            this.failureCount = 0;
+            if (this.state == SourceState.DEGRADED) {
+                this.state = SourceState.ACTIVE;
+            }
+        }
+    }
+
+    private static void validarNombre(String name) {
         if (name == null || name.isBlank()) {
             throw new DomainException("SOURCE_NAME_REQUIRED", "La fuente necesita un nombre");
         }
+    }
+
+    private static void validarUrl(String feedUrl) {
         if (feedUrl == null || !(feedUrl.startsWith("http://") || feedUrl.startsWith("https://"))) {
             throw new DomainException("SOURCE_URL_INVALID", "La URL del feed no es válida: " + feedUrl);
         }
-        return new Source(SourceId.newId(), name.trim(), feedUrl.trim(), SourceState.ACTIVE, 0, null, null, null);
     }
 
     public static Source rehydrate(SourceId id, String name, String feedUrl, SourceState state,

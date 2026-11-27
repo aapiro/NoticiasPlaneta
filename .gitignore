@@ -11,3 +11,6 @@ target/
 
 # logs de la edicion diaria (efimeros)
 logs/
+
+# Copias de seguridad locales: nunca al repo
+backups/

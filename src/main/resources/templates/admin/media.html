@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Imágenes — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Imágenes propias</h1>
+    <p class="meta">
+        Las noticias del feed traen la foto enlazada al medio de origen. Si esa URL cambia,
+        bloquea el referer o caduca la firma, la portada se queda sin imagen. Cachearlas las
+        sirve desde este servidor.
+    </p>
+
+    <div class="aviso" th:if="${param.ok}">
+        Cacheadas <strong th:text="${param.ok}"></strong> ·
+        fallidas <strong th:text="${param.fallidas}"></strong> ·
+        quedan <strong th:text="${param.quedan}"></strong>
+    </div>
+
+    <p>
+        Pendientes de cachear: <strong th:text="${pendientes}">0</strong>
+    </p>
+
+    <form method="post" th:action="@{/admin/media/cachear}" class="inline">
+        <select name="limite" aria-label="Cuántas por tanda">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+        </select>
+        <button type="submit">Cachear tanda</button>
+    </form>
+
+    <div class="aviso">
+        Se descargan, se limpian (sin EXIF) y se guardan por huella: la misma foto en dos
+        noticias ocupa una sola vez. Una imagen que falle no invalida la noticia.
+    </div>
+</main>
+</body>
+</html>

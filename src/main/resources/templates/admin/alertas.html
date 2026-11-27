@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Avisos — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Avisos de fuentes</h1>
+    <p class="meta">
+        Una fuente pasa a degradada tras 5 fallos seguidos. Se sigue leyendo: el aviso
+        dice que algo va mal, no que esté apagada.
+    </p>
+
+    <p>
+        <strong th:text="${vigiladas}">8</strong> fuentes vigiladas ·
+        <strong th:text="${degradadas.size()}">0</strong> degradadas ·
+        <strong th:text="${caidas.size()}">0</strong> desactivadas a mano
+    </p>
+
+    <p class="aviso" th:if="${degradadas.isEmpty()}">
+        Ninguna fuente degradada ahora mismo.
+    </p>
+
+    <table th:if="${!degradadas.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Medio</th>
+            <th>Feed</th>
+            <th>Fallos seguidos</th>
+            <th>Última lectura</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="f : ${degradadas}">
+            <td><strong th:text="${f.nombre()}">Medio</strong></td>
+            <td class="url"><a th:href="${f.url()}" th:text="${f.url()}" rel="noopener" target="_blank">url</a></td>
+            <td th:text="${f.fallos()}">5</td>
+            <td th:text="${f.ultima() != null ? #temporals.format(f.ultima(), 'dd/MM HH:mm') : '—'}">—</td>
+            <td>
+                <form method="post" th:action="@{'/admin/fuentes/' + ${f.id()} + '/estado'}" class="inline">
+                    <input type="hidden" name="accion" value="desactivar">
+                    <button type="submit">Dejar de leerla</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Historial</h2>
+    <p class="meta" th:if="${avisos.isEmpty()}">
+        Sin avisos registrados todavía. Aparecerán aquí en cuanto una fuente falle
+        5 veces seguidas.
+    </p>
+
+    <table th:if="${!avisos.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Cuándo</th>
+            <th>Fuente</th>
+            <th>Qué pasó</th>
+            <th>Detalle</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${avisos}">
+            <td th:text="${#temporals.format(a.cuando(), 'dd/MM/yyyy HH:mm')}">—</td>
+            <td th:text="${a.fuente()}">Medio</td>
+            <td>
+                <span class="estado" th:classappend="${a.accion() == 'SOURCE_DEGRADED' ? 'degradada' : 'activa'}"
+                      th:text="${a.accion() == 'SOURCE_DEGRADED' ? 'degradada' : 'recuperada'}">—</span>
+            </td>
+            <td th:text="${a.detalle() != null ? a.detalle() : '—'}">—</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="aviso">
+        El aviso sale del contador de fallos del propio agregado, no de un cron que
+        revisa la tabla. Se registra una sola vez por degradación, no en cada intento.
+    </div>
+</main>
+</body>
+</html>

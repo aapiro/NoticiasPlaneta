@@ -32,6 +32,8 @@ class IngestSourceServiceTest {
     private InMemoryItems items;
     private StubFeedFetcher fetcher;
     private InMemoryEventPublisher events;
+    private final java.util.List<com.noticiasplaneta.shared.domain.AuditEntry> auditados =
+            new java.util.ArrayList<>();
     private IngestSourceService service;
     private Source source;
 
@@ -43,7 +45,7 @@ class IngestSourceServiceTest {
         events = new InMemoryEventPublisher();
         service = new IngestSourceService(
                 sources, items, fetcher, new InMemoryLock(), events,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+                Clock.fixed(NOW, ZoneOffset.UTC), auditados::add);
         source = sources.save(Source.register("BOE", "https://boe.es/rss"));
     }
 
@@ -145,6 +147,53 @@ class IngestSourceServiceTest {
     }
 
     @Test
+    @DisplayName("El aviso de degradación sale una sola vez, en el quinto fallo")
+    void avisoDeDegradacionUnaVez() {
+        fetcher.willReturn(new FeedFetchOutcome.Failed("HTTP_503"));
+
+        // Cuatro fallos: todavía no hay aviso. Es la mitad del test que importa:
+        // avisar en cada fallo convierte el panel en ruido y se deja de mirar.
+        for (int i = 0; i < Source.DEGRADE_THRESHOLD - 1; i++) {
+            service.run(source.id());
+        }
+        assertThat(auditados).isEmpty();
+
+        service.run(source.id());
+
+        var avisos = auditados.stream()
+                .filter(a -> a.action().equals("SOURCE_DEGRADED"))
+                .toList();
+        assertThat(avisos).hasSize(1);
+        assertThat(avisos.get(0).actorType()).isEqualTo("SYSTEM");
+        assertThat(avisos.get(0).entityId()).isEqualTo(source.id().value().toString());
+        assertThat(avisos.get(0).after()).isEqualTo("HTTP_503");
+
+        // Un sexto fallo no repite el aviso: ya estaba degradada.
+        service.run(source.id());
+        assertThat(auditados.stream().filter(a -> a.action().equals("SOURCE_DEGRADED")))
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Al recuperarse se cierra el aviso")
+    void avisoDeRecuperacion() {
+        fetcher.willReturn(new FeedFetchOutcome.Failed("HTTP_503"));
+        for (int i = 0; i < Source.DEGRADE_THRESHOLD; i++) {
+            service.run(source.id());
+        }
+        assertThat(sources.findById(source.id()).orElseThrow().state()).isEqualTo(SourceState.DEGRADED);
+
+        fetcher.willReturn(new FeedFetchOutcome.Fetched(List.of(
+                entry("n1", "Titular", "https://boe.es/n1")), null, null));
+        service.run(source.id());
+
+        assertThat(sources.findById(source.id()).orElseThrow().state()).isEqualTo(SourceState.ACTIVE);
+        assertThat(auditados.stream().filter(a -> a.action().equals("SOURCE_RECOVERED")))
+                .as("recuperarse sin dejar rastro deja el panel mintiendo")
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("Un item sin título se descarta y se contabiliza como rechazado")
     void tituloVacioSeRechaza() {
         fetcher.willReturn(new FeedFetchOutcome.Fetched(List.of(
@@ -163,7 +212,7 @@ class IngestSourceServiceTest {
         InMemoryLock lock = new InMemoryLock();
         lock.tryAcquire("ingest:" + source.id());
         IngestSourceService concurrente = new IngestSourceService(
-                sources, items, fetcher, lock, events, Clock.fixed(NOW, ZoneOffset.UTC));
+                sources, items, fetcher, lock, events, Clock.fixed(NOW, ZoneOffset.UTC), auditados::add);
 
         IngestReport report = concurrente.run(source.id());
 

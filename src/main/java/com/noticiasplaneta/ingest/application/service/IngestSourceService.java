@@ -13,8 +13,12 @@ import com.noticiasplaneta.ingest.domain.FeedEntry;
 import com.noticiasplaneta.ingest.domain.IngestItem;
 import com.noticiasplaneta.ingest.domain.Source;
 import com.noticiasplaneta.ingest.domain.SourceId;
+import com.noticiasplaneta.shared.domain.AuditEntry;
+import com.noticiasplaneta.shared.domain.AuditPort;
 import com.noticiasplaneta.shared.domain.DomainException;
 import com.noticiasplaneta.shared.domain.EventPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -31,11 +35,17 @@ import java.util.Set;
  */
 public class IngestSourceService implements IngestSourceUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(IngestSourceService.class);
+
+    /** Actor de las alertas del sistema: no hay persona detrás de una degradación. */
+    private static final String ACTOR = "sistema";
+
     private final SourceRepository sources;
     private final IngestItemRepository items;
     private final FeedFetcher fetcher;
     private final ExecutionLock lock;
     private final EventPublisher events;
+    private final AuditPort audit;
     private final Clock clock;
 
     public IngestSourceService(SourceRepository sources,
@@ -43,13 +53,15 @@ public class IngestSourceService implements IngestSourceUseCase {
                                FeedFetcher fetcher,
                                ExecutionLock lock,
                                EventPublisher events,
-                               Clock clock) {
+                               Clock clock,
+                               AuditPort audit) {
         this.sources = sources;
         this.items = items;
         this.fetcher = fetcher;
         this.lock = lock;
         this.events = events;
         this.clock = clock;
+        this.audit = audit;
     }
 
     @Override
@@ -79,13 +91,17 @@ public class IngestSourceService implements IngestSourceUseCase {
 
         return switch (outcome) {
             case FeedFetchOutcome.NotModified ignored -> {
-                source.recordSuccess(now, source.etag(), source.lastModified());
+                boolean recuperada = source.recordSuccess(now, source.etag(), source.lastModified());
                 sources.save(source);
+                if (recuperada) avisarRecuperacion(source, now);
                 yield IngestReport.ofNotModified();
             }
             case FeedFetchOutcome.Failed failed -> {
-                source.recordFailure(now);
+                // RN1: al quinto fallo seguido la fuente pasa a DEGRADED. Ese quinto
+                // fallo es el único que devuelve true, así que el aviso sale una vez.
+                boolean degradada = source.recordFailure(now);
                 sources.save(source);
+                if (degradada) avisarDegradacion(source, failed.reason(), now);
                 yield IngestReport.error(failed.reason());
             }
             case FeedFetchOutcome.Fetched fetched -> persist(source, fetched, now);
@@ -139,11 +155,26 @@ public class IngestSourceService implements IngestSourceUseCase {
         }
 
         items.saveAll(toPersist);
-        source.recordSuccess(now, fetched.etag(), fetched.lastModified());
+        boolean recuperada = source.recordSuccess(now, fetched.etag(), fetched.lastModified());
         sources.save(source);
+        if (recuperada) avisarRecuperacion(source, now);
 
         eventsToPublish.forEach(events::publish);
 
         return new IngestReport(fetched.entries().size(), created, duplicated, rejected, false, null);
+    }
+
+    /** Una fuente rota en silencio es peor que una fuente caída: el aviso tiene que salir. */
+    private void avisarDegradacion(Source source, String motivo, Instant ahora) {
+        log.warn("fuente {} ({}) degradada tras {} fallos: {}",
+                source.name(), source.id().value(), source.failureCount(), motivo);
+        audit.record(new AuditEntry(ACTOR, "SYSTEM", "SOURCE_DEGRADED", "source",
+                source.id().value().toString(), null, motivo, ahora));
+    }
+
+    private void avisarRecuperacion(Source source, Instant ahora) {
+        log.info("fuente {} ({}) recuperada", source.name(), source.id().value());
+        audit.record(new AuditEntry(ACTOR, "SYSTEM", "SOURCE_RECOVERED", "source",
+                source.id().value().toString(), "DEGRADED", "ACTIVE", ahora));
     }
 }

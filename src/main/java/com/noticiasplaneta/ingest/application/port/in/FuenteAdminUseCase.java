@@ -22,6 +22,12 @@ public interface FuenteAdminUseCase {
 
     boolean desactivar(String id);
 
+    /** Degradaciones y recuperaciones recientes, de la auditoría. */
+    List<Aviso> historial(int limite);
+
+    record Aviso(String fuente, String accion, String detalle, Instant cuando) {
+    }
+
     record Fuente(String id, String nombre, String url, String estado, boolean confianza,
                   int fallos, Instant ultima) {
 

@@ -16,10 +16,19 @@ class FuenteAdminService implements FuenteAdminUseCase {
 
     private final SourceRepository sources;
     private final SourceTrustRepository trust;
+    private final com.noticiasplaneta.ingest.application.port.out.AvisoRepository avisos;
 
-    FuenteAdminService(SourceRepository sources, SourceTrustRepository trust) {
+    FuenteAdminService(SourceRepository sources, SourceTrustRepository trust,
+                       com.noticiasplaneta.ingest.application.port.out.AvisoRepository avisos) {
         this.sources = sources;
         this.trust = trust;
+        this.avisos = avisos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Aviso> historial(int limite) {
+        return avisos.recientes(Math.clamp(limite, 1, 200));
     }
 
     @Override

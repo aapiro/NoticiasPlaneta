@@ -13,6 +13,7 @@ import com.noticiasplaneta.ingest.application.port.out.IngestItemRepository;
 import com.noticiasplaneta.ingest.application.port.out.SourceRepository;
 import com.noticiasplaneta.ingest.application.service.AddSourceService;
 import com.noticiasplaneta.ingest.application.service.IngestSourceService;
+import com.noticiasplaneta.shared.domain.AuditPort;
 import com.noticiasplaneta.shared.domain.EventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,8 +34,9 @@ class IngestConfiguration {
                                             FeedFetcher fetcher,
                                             ExecutionLock lock,
                                             EventPublisher events,
-                                            Clock clock) {
-        return new IngestSourceService(sources, items, fetcher, lock, events, clock);
+                                            Clock clock,
+                                            AuditPort audit) {
+        return new IngestSourceService(sources, items, fetcher, lock, events, clock, audit);
     }
 
     @Bean

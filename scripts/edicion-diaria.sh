@@ -140,6 +140,37 @@ where rn_fuente <= ${MAX_POR_FUENTE} and rn_seccion <= ${MAX_POR_SECCION}
 order by fecha desc
 limit ${LIMITE};")"
 
+# Deduplicacion por hecho: dos medios cubren lo mismo con titulares distintos y el
+# hash no lo detecta. Se descarta la pieza si comparte 2+ palabras significativas
+# (5+ letras) con una ya elegida. La seleccion viene ordenada por fecha desc, asi
+# que se conserva la mas reciente.
+SELECCION="$(printf '%s\n' "$SELECCION" | awk -F'|' '
+BEGIN {
+    split("sobre desde hasta entre contra segun tras para como este esta estos estas \
+           donde cuando porque aunque mientras aunque desde hace tras cada otro otra \
+           nuevo nueva primeros primeras ultima ultimo gran grandes mejor peor", a, " ")
+    for (i in a) stop[a[i]] = 1
+}
+{
+    t = tolower($2)
+    gsub(/[áàäâ]/, "a", t); gsub(/[éèëê]/, "e", t); gsub(/[íìïî]/, "i", t)
+    gsub(/[óòöô]/, "o", t); gsub(/[úùüû]/, "u", t); gsub(/ñ/, "n", t)
+    gsub(/[^a-z0-9]+/, " ", t)
+    n = split(t, w, " ")
+    delete pal
+    for (i = 1; i <= n; i++)
+        if (length(w[i]) >= 5 && !(w[i] in stop)) pal[w[i]] = 1
+
+    comunes = 0
+    for (k in pal) if (k in vistos) comunes++
+    if (comunes >= 2) { descartadas++; next }
+
+    for (k in pal) vistos[k] = 1
+    print
+}
+END { if (descartadas > 0) printf "  descartadas por mismo hecho: %d\n", descartadas > "/dev/stderr" }
+')"
+
 TOTAL="$(printf '%s\n' "$SELECCION" | grep -c '|' || true)"
 log "seleccionadas: ${TOTAL} piezas (tope ${MAX_POR_FUENTE}/fuente, ${MAX_POR_SECCION}/seccion, ventana ${VENTANA_HORAS}h)"
 

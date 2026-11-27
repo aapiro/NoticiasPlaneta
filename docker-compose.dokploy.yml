@@ -1,0 +1,68 @@
+# Despliegue en Dokploy.
+#
+# Diferencias con docker-compose.yml (que es el de desarrollo local):
+#   - Sin Caddy: Dokploy pone Traefik delante y gestiona el certificado.
+#   - Sin Ollama: no hay ninguna capacidad LOCAL encendida. Si se enciende
+#     SEARCH_SEMANTIC o ENRICH_* en modo LOCAL, hay que añadirlo aquí (1,6 GB).
+#   - Sin overrides de loopback.
+#   - Los secretos NO van escritos: los pone Dokploy en el entorno.
+#
+# Ver docs/OPERACION-DESPLIEGUE.md
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.5-pg16
+    environment:
+      POSTGRES_DB: noticias
+      POSTGRES_USER: noticias
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U noticias -d noticias"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    # Sin puertos publicados: solo la app habla con la base.
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/noticias
+      DB_USER: noticias
+      DB_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD}
+      AGENT_API_KEY: ${AGENT_API_KEY:?falta AGENT_API_KEY}
+      AGENT_ID: ${AGENT_ID:-newsroom-agent}
+      # Passkeys y enlaces absolutos: el dominio real, no localhost.
+      RP_ID: ${RP_ID:-noticiasplaneta.com}
+      RP_ORIGIN: ${RP_ORIGIN:-https://noticiasplaneta.com}
+      NOTICIAS_BASE_URL: ${NOTICIAS_BASE_URL:-https://noticiasplaneta.com}
+      MEDIA_ROOT: /data/media
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      ADMIN_TOTP_SECRET: ${ADMIN_TOTP_SECRET:-}
+      # Langfuse está desactivado por defecto: sin claves, cada arranque
+      # escupe errores de conexión que no significan nada.
+      LANGFUSE_ENABLED: ${LANGFUSE_ENABLED:-false}
+      LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL:-https://cloud.langfuse.com}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_ENVIRONMENT: ${LANGFUSE_ENVIRONMENT:-production}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - media-data:/data/media
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+volumes:
+  db-data:
+  media-data:

@@ -1,9 +1,27 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org" th:fragment="page(titulo, contenido)">
-<head>
+<head th:with="ogImg=${articulo != null and articulo.imageUrl() != null
+                        ? articulo.imageUrl()
+                        : (articulos != null and !#lists.isEmpty(articulos) and articulos[0].imageUrl() != null
+                            ? articulos[0].imageUrl() : null)}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${titulo}">Noticias Planeta</title>
+
+    <!-- SEO y vista previa al compartir (backlog #1) -->
+    <link rel="canonical" th:href="${baseUrl + rutaActual}">
+    <meta name="description" th:content="${descripcion} ?: 'Noticias Planeta: lo que pasa, en cinco minutos y con el enlace a la fuente original.'">
+    <meta property="og:site_name" content="Noticias Planeta">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:type" th:content="${articulo != null} ? 'article' : 'website'">
+    <meta property="og:title" th:content="${titulo}">
+    <meta property="og:description" th:content="${descripcion} ?: 'Noticias Planeta: lo que pasa, en cinco minutos y con el enlace a la fuente original.'">
+    <meta property="og:url" th:content="${baseUrl + rutaActual}">
+    <meta property="og:image" th:if="${ogImg != null}" th:content="${ogImg}">
+    <meta name="twitter:card" th:content="${ogImg != null} ? 'summary_large_image' : 'summary'">
+    <meta name="twitter:title" th:content="${titulo}">
+    <meta name="twitter:description" th:content="${descripcion} ?: 'Noticias Planeta: lo que pasa, en cinco minutos y con el enlace a la fuente original.'">
+    <meta name="twitter:image" th:if="${ogImg != null}" th:content="${ogImg}">
     <style>
         /* Editorial Nocturne: sistema de diseno, ver docs/diseno/editorial-nocturne/DESIGN.md */
         :root {

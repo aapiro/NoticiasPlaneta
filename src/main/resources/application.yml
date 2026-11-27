@@ -37,6 +37,11 @@ admin:
     password-hash: ${ADMIN_PASSWORD_HASH:}
     totp-secret: ${ADMIN_TOTP_SECRET:}
 
+# URL publica del sitio: la usan el sitemap, robots y las etiquetas Open Graph.
+# En produccion sera https://noticiasplaneta.com
+noticias:
+  base-url: ${NOTICIAS_BASE_URL:https://localhost}
+
 # Capacidades de IA activables (ADR-011). Todas apagadas por defecto: el sistema
 # funciona sin IA y se enciende por capacidad. En F1 manda la tabla feature_flag.
 features:

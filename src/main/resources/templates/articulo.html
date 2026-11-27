@@ -38,6 +38,8 @@
 
         <p class="entradilla" th:text="${texto.body()}">Texto</p>
     </div>
+
+    <script type="application/ld+json" th:if="${jsonLd != null}" th:utext="${jsonLd}"></script>
 </main>
 </body>
 </html>

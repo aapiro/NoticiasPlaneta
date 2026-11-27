@@ -20,6 +20,19 @@ retención, panel operativo, IA construida pero apagada.
 | 50 | CI en GitHub Actions | Medio | Bajo | 317 tests que hoy se corren a mano. Que corran en cada push |
 | 45 | Métricas de ingesta en el panel | Bajo | Bajo | Cuántas por fuente, duplicadas y rechazadas, y cómo evoluciona |
 
+## Estado (27/11/2026)
+
+- **9 · CI en GitHub Actions**: **hecho**. Ya existía `.github/workflows/ci.yml`
+  (push a master y PRs, JDK 21, `./mvnw -B verify` con Testcontainers). Verificado
+  con `gh run list`: las últimas cinco ejecuciones en verde, incluida la de hoy.
+  Solo falta el badge en el README.
+- **7 · Alertas de fuente degradada**: el aviso en el panel sale sin nada extra;
+  el envío por Telegram **no puede probarse** porque Telegram no está configurado
+  (ni variables ni menciones en `application.yml`). Se puede implementar y dejar
+  el canal apagado.
+- El resto (1, 2, 3, 4, 5, 6, 8, 10) es íntegramente sin IA y sin dependencias
+  externas pendientes.
+
 ## Descartados por ahora
 
 - **Comentarios**: moderación y RGPD para un portal que aún no tiene lectores.

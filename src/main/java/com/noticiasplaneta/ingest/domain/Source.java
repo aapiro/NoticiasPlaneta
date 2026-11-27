@@ -87,6 +87,19 @@ public final class Source {
         this.state = SourceState.DISABLED;
     }
 
+    /**
+     * Reactiva a mano una fuente desactivada.
+     *
+     * <p>Los fallos acumulados se ponen a cero: si no, una fuente recién reactivada
+     * podría volver a DEGRADED con un solo error más.
+     */
+    public void enable() {
+        if (this.state == SourceState.DISABLED) {
+            this.state = SourceState.ACTIVE;
+            this.failureCount = 0;
+        }
+    }
+
     public boolean isFetchable() {
         return state != SourceState.DISABLED;
     }

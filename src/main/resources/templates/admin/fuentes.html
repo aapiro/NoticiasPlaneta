@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Fuentes — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Fuentes de ingesta</h1>
+    <p class="meta">
+        Un medio con la URL de su feed RSS. Una fuente desactivada deja de leerse pero
+        conserva sus piezas y sus enlaces: nada se borra.
+    </p>
+
+    <div class="aviso" th:if="${param.ok}">
+        Hecho: <strong th:text="${param.ok}"></strong>
+    </div>
+    <div class="aviso error" th:if="${param.error}">
+        No se pudo: <strong th:text="${param.error}"></strong>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Medio</th>
+            <th>Feed</th>
+            <th>Estado</th>
+            <th>Fallos</th>
+            <th>Última lectura</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="f : ${fuentes}">
+            <td>
+                <strong th:text="${f.nombre()}">Medio</strong>
+                <span class="sello" th:if="${f.confianza()}">de confianza</span>
+            </td>
+            <td class="url"><a th:href="${f.url()}" th:text="${f.url()}" rel="noopener" target="_blank">url</a></td>
+            <td>
+                <span class="estado" th:classappend="${f.activa() ? (f.degradada() ? 'degradada' : 'activa') : 'apagada'}"
+                      th:text="${f.estado()}">ACTIVE</span>
+            </td>
+            <td th:text="${f.fallos()}">0</td>
+            <td th:text="${f.ultima() != null ? #temporals.format(f.ultima(), 'dd/MM HH:mm') : '—'}">—</td>
+            <td>
+                <form method="post" th:action="@{'/admin/fuentes/' + ${f.id()} + '/estado'}" class="inline">
+                    <input type="hidden" name="accion" th:value="${f.activa() ? 'desactivar' : 'activar'}">
+                    <button type="submit" th:text="${f.activa() ? 'Desactivar' : 'Activar'}">Desactivar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Añadir un medio</h2>
+    <form method="post" th:action="@{/admin/fuentes}" class="alta">
+        <label>Nombre
+            <input type="text" name="nombre" required maxlength="120" placeholder="El País">
+        </label>
+        <label>URL del feed
+            <input type="url" name="feedUrl" required placeholder="https://ejemplo.com/rss/">
+        </label>
+        <button type="submit">Añadir</button>
+    </form>
+
+    <div class="aviso">
+        Se comprueba que la URL sea http o https y que no esté ya activa. Nada más:
+        la primera lectura dirá si el feed sirve.
+    </div>
+</main>
+</body>
+</html>

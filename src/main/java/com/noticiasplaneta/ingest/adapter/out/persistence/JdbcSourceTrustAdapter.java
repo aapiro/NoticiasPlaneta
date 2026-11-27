@@ -21,12 +21,15 @@ class JdbcSourceTrustAdapter implements SourceTrustRepository {
     @Transactional(readOnly = true)
     public List<Row> findAll() {
         return jdbc.query("""
-                select id, name, state, confianza, failure_count
+                select id, name, feed_url, state, confianza, failure_count, last_checked_at
                 from source
                 order by name
                 """, (rs, n) -> new Row(
-                rs.getString("id"), rs.getString("name"), rs.getString("state"),
-                rs.getBoolean("confianza"), rs.getInt("failure_count")));
+                rs.getString("id"), rs.getString("name"), rs.getString("feed_url"),
+                rs.getString("state"), rs.getBoolean("confianza"), rs.getInt("failure_count"),
+                rs.getObject("last_checked_at", java.time.OffsetDateTime.class) == null
+                        ? null
+                        : rs.getObject("last_checked_at", java.time.OffsetDateTime.class).toInstant()));
     }
 
     @Override

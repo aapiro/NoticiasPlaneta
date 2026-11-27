@@ -1,5 +1,6 @@
 package com.noticiasplaneta.ingest.application.port.out;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ public interface SourceTrustRepository {
 
     boolean setTrusted(UUID sourceId, boolean trusted);
 
-    record Row(String id, String name, String state, boolean trusted, int failureCount) {
+    record Row(String id, String name, String feedUrl, String state, boolean trusted,
+               int failureCount, Instant lastCheckedAt) {
     }
 }

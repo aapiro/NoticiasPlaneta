@@ -61,6 +61,15 @@
                  padding:.6rem .8rem; margin-bottom:1rem; }
         .aviso { border-left:3px solid var(--aviso); background:rgba(180,83,9,.08);
                  padding:.6rem .8rem; margin:1rem 0; font-size:.9rem; }
+        .estado.activa    { background:rgba(29,78,216,.12); color:var(--acento); }
+        .estado.degradada { background:rgba(180,83,9,.15); color:var(--aviso); }
+        .estado.apagada   { background:rgba(120,120,130,.15); color:var(--tenue); }
+        td.url a { color:var(--tenue); font-size:.82rem; word-break:break-all; }
+        form.alta { border-top:1px solid var(--linea); padding-top:1rem; margin-top:1.5rem;
+                    display:flex; gap:.75rem; align-items:flex-end; flex-wrap:wrap; }
+        form.alta label { margin:0; }
+        form.alta input { min-width:16rem; }
+        h2 { font-size:1rem; margin-top:2rem; }
         .campo { margin-bottom:.9rem; }
         label { display:block; font-size:.82rem; color:var(--tenue); margin-bottom:.25rem; }
         .meta { color:var(--tenue); font-size:.85rem; }
@@ -91,6 +100,7 @@
         <a class="chip" th:href="@{/admin}">Bandeja</a>
         <a class="chip" th:href="@{/admin/edicion}">Edición</a>
         <a class="chip" th:href="@{/admin/secciones}">Secciones</a>
+        <a class="chip" th:href="@{/admin/fuentes}">Fuentes</a>
         <a class="chip" th:href="@{/admin/media}">Imágenes</a>
         <a class="chip" th:href="@{/admin/generador}">Generador</a>
         <a class="chip" th:href="@{/admin/autopublicacion}">Automática</a>

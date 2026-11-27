@@ -1,5 +1,6 @@
 package com.noticiasplaneta.news.application.port.out;
 
+import com.noticiasplaneta.news.application.port.in.FeedItem;
 import com.noticiasplaneta.news.application.port.in.PublishedArticle;
 
 import java.util.List;
@@ -14,6 +15,9 @@ public interface ArticleQueryRepository {
 
     /** Total de publicadas de la sección (o del sitio si {@code sectionId} es nulo). */
     long countPublished(String sectionId);
+
+    /** Últimas publicadas con su cuerpo, para el RSS de salida (backlog #5). */
+    List<FeedItem> findForFeed(String sectionId, int limit);
 
     Optional<PublishedArticle> findPublishedBySectionAndSlug(String sectionId, String slug);
 

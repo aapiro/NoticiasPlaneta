@@ -15,6 +15,9 @@ public interface ListPublishedArticlesUseCase {
      */
     Page paginar(String sectionId, int pagina, int tamano);
 
+    /** Últimas publicadas con cuerpo, para el RSS de salida (backlog #5). */
+    List<FeedItem> feed(String sectionId, int limite);
+
     record Page(List<PublishedArticle> articulos, int pagina, int tamano, long total) {
 
         public boolean hayAnterior() {

@@ -52,6 +52,26 @@ class JdbcArticleQueryAdapter implements ArticleQueryRepository {
         return total == null ? 0 : total;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.noticiasplaneta.news.application.port.in.FeedItem> findForFeed(String sectionId, int limit) {
+        return jdbc.query("""
+                select a.id, a.section_id, a.slug, a.title, a.body, a.published_at, i.image_url
+                from article a
+                left join ingest_item i on i.id::text = a.ingest_item_id
+                where a.state = 'PUBLISHED'
+                  and (?::text is null or a.section_id = ?)
+                order by a.published_at desc nulls last
+                limit ?""",
+                (rs, n) -> new com.noticiasplaneta.news.application.port.in.FeedItem(
+                        rs.getString("id"), rs.getString("section_id"), rs.getString("slug"),
+                        rs.getString("title"), rs.getString("body"),
+                        rs.getTimestamp("published_at") == null
+                                ? null : rs.getTimestamp("published_at").toInstant(),
+                        rs.getString("image_url")),
+                sectionId, sectionId, limit);
+    }
+
     private static final java.time.format.DateTimeFormatter LABEL =
             java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy, HH:mm", java.util.Locale.forLanguageTag("es-ES"))
                     .withZone(java.time.ZoneId.of("Europe/Madrid"));

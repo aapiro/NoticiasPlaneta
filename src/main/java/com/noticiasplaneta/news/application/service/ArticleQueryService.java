@@ -1,6 +1,7 @@
 package com.noticiasplaneta.news.application.service;
 
 import com.noticiasplaneta.news.application.port.in.ArticleText;
+import com.noticiasplaneta.news.application.port.in.FeedItem;
 import com.noticiasplaneta.news.application.port.in.GetPublishedArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.ListPublishedArticlesUseCase;
 import com.noticiasplaneta.news.application.port.in.ListPublishedArticlesUseCase.Page;
@@ -27,6 +28,11 @@ public class ArticleQueryService implements ListPublishedArticlesUseCase, GetPub
     @Override
     public List<PublishedArticle> latest(String sectionId, int limit) {
         return queries.findPublished(sectionId, Math.clamp(limit, 1, 100));
+    }
+
+    @Override
+    public List<FeedItem> feed(String sectionId, int limite) {
+        return queries.findForFeed(sectionId, Math.clamp(limite, 1, 100));
     }
 
     @Override

@@ -31,4 +31,10 @@ class SeoModelAdvice {
         String query = request.getQueryString();
         return request.getRequestURI() + (query == null || query.isBlank() ? "" : "?" + query);
     }
+
+    /** Ruta sin query, para construir los enlaces de paginación. */
+    @ModelAttribute("rutaSinPagina")
+    String rutaSinPagina(HttpServletRequest request) {
+        return request.getRequestURI();
+    }
 }

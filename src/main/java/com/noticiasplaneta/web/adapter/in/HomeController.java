@@ -18,16 +18,21 @@ class HomeController {
         this.medios = medios;
     }
 
+    private static final int TAMANO_PAGINA = 24;
+
     @GetMapping("/")
-    String portada(@RequestParam(name = "seccion", required = false) String seccion, Model model) {
-        var portada = articles.latest(seccion, 30);
+    String portada(@RequestParam(name = "seccion", required = false) String seccion,
+                   @RequestParam(name = "pagina", defaultValue = "1") int pagina,
+                   Model model) {
+        var page = articles.paginar(seccion, pagina, TAMANO_PAGINA);
 
         model.addAttribute("titulo", "Noticias Planeta");
         model.addAttribute("seccion", seccion);
-        model.addAttribute("articulos", portada);
+        model.addAttribute("articulos", page.articulos());
+        model.addAttribute("pagina", page);
         // una sola consulta para las imágenes principales: nada de N+1
         model.addAttribute("medios", medios.leadsOf(
-                portada.stream().map(a -> a.id()).toList()));
+                page.articulos().stream().map(a -> a.id()).toList()));
         return "portada";
     }
 }

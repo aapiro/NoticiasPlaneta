@@ -57,7 +57,7 @@ class SitemapController {
         url(xml, baseUrl + "/", null, "hourly", "1.0");
         for (var seccion : secciones.sections()) {
             if (seccion.activa()) {
-                url(xml, baseUrl + "/?seccion=" + seccion.slug(), null, "hourly", "0.8");
+                url(xml, baseUrl + "/seccion/" + seccion.slug(), null, "hourly", "0.8");
             }
         }
 

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: page(${titulo}, ~{::main})}">
+<body>
+<main>
+
+    <!-- ADR-012: el enfoque se declara al lector. Un sesgo oculto no es una linea
+         editorial, es un engano. -->
+    <header class="cabecera-seccion">
+        <h1 th:text="${seccionActual.nombre()}">Sección</h1>
+        <p class="descripcion" th:if="${seccionActual.descripcion() != null and !#strings.isEmpty(seccionActual.descripcion())}"
+           th:text="${seccionActual.descripcion()}">Qué cubre esta sección.</p>
+
+        <p class="enfoque" th:with="e=${seccionActual.enfoque()}">
+            <span class="chip" th:classappend="${'chip-' + #strings.toLowerCase(e)}"
+                  th:text="${e == 'IZQUIERDA' ? 'Enfoque de izquierda'
+                            : (e == 'DERECHA' ? 'Enfoque de derecha'
+                            : (e == 'CENTRO' ? 'Enfoque de centro' : 'Enfoque neutral'))}">Enfoque</span>
+        </p>
+        <p class="nota-enfoque">
+            La línea editorial decide qué se elige y cómo se explica; no autoriza a inventar
+            ni a omitir. Cada pieza enlaza siempre a su fuente original.
+        </p>
+    </header>
+
+    <p class="vacio" th:if="${pagina.vacia()}">
+        Todavía no hay artículos publicados en esta sección.
+    </p>
+
+    <div class="rejilla" th:if="${!pagina.vacia()}">
+        <article class="tarjeta" th:each="a : ${articulos}">
+            <a th:href="@{'/' + ${a.sectionId()} + '/' + ${a.slug()}}">
+                <img class="miniatura"
+                     th:if="${medios.get(a.id()) != null or a.imageUrl() != null}"
+                     th:src="${medios.get(a.id()) != null
+                                ? '/media/' + #strings.substringAfter(medios.get(a.id()).storageKey(), 'media/')
+                                : a.imageUrl()}"
+                     th:alt="${medios.get(a.id()) != null ? medios.get(a.id()).altText() : a.title()}"
+                     loading="lazy">
+                <h2 th:text="${a.title()}">Titular</h2>
+            </a>
+            <p class="meta">
+                <time th:text="${a.publishedLabel()}">fecha</time>
+                <span class="sello" th:if="${a.automatica()}">sin revisión humana</span>
+            </p>
+        </article>
+    </div>
+
+    <nav th:replace="~{layout :: paginacion('/seccion/' + ${seccionActual.slug()})}"></nav>
+
+</main>
+</body>
+</html>

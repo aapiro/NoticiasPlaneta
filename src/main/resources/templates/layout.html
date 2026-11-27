@@ -10,6 +10,10 @@
 
     <!-- SEO y vista previa al compartir (backlog #1) -->
     <link rel="canonical" th:href="${baseUrl + rutaActual}">
+    <link rel="prev" th:if="${pagina != null and pagina.hayAnterior()}"
+          th:href="${baseUrl + rutaSinPagina + '?pagina=' + (pagina.pagina() - 1)}">
+    <link rel="next" th:if="${pagina != null and pagina.haySiguiente()}"
+          th:href="${baseUrl + rutaSinPagina + '?pagina=' + (pagina.pagina() + 1)}">
     <meta name="description" th:content="${descripcion} ?: 'Noticias Planeta: lo que pasa, en cinco minutos y con el enlace a la fuente original.'">
     <meta property="og:site_name" content="Noticias Planeta">
     <meta property="og:locale" content="es_ES">
@@ -136,6 +140,24 @@
         .vacio { color: var(--muted); font-family: var(--sans); font-size: 14px;
                  border: 1px dashed var(--border-strong); border-radius: var(--r);
                  padding: 2rem; text-align: center; }
+        .paginacion { display: flex; gap: 1rem; align-items: center; justify-content: center;
+                      margin: 2.5rem 0 0; padding-top: 1.5rem; border-top: 1px solid var(--border);
+                      font-family: var(--sans); font-size: 13px; color: var(--muted); }
+        .paginacion a { color: var(--amber); text-decoration: none; }
+        .paginacion a:hover { color: var(--amber-contrast); }
+        .paginacion .actual { font-variant-numeric: tabular-nums; }
+        .cabecera-seccion { padding: 1.5rem 0 2rem; border-bottom: 1px solid var(--border);
+                            margin-bottom: 2rem; }
+        .cabecera-seccion h1 { font-family: var(--serif); font-size: 2.2rem; line-height: 1.15;
+                               margin: 0 0 .5rem; }
+        .cabecera-seccion .descripcion { color: var(--muted); font: 14px/1.55 var(--sans);
+                                         max-width: 62ch; margin: 0 0 1rem; }
+        .enfoque { margin: 0 0 .5rem; }
+        .chip-izquierda { border-color: #b1553c; color: #e08a6f; }
+        .chip-derecha   { border-color: #3f6bb5; color: #8aa7e0; }
+        .chip-centro    { border-color: #8a8f98; color: #b9bec7; }
+        .chip-neutral   { border-color: var(--border-strong); color: var(--muted); }
+        .nota-enfoque { color: var(--muted); font: 12px/1.5 var(--sans); max-width: 62ch; }
         footer { border-top: 1px solid var(--border); color: var(--muted);
                  font: 11px/16px var(--sans); letter-spacing: .05em;
                  padding: 1.5rem; text-align: center; text-transform: uppercase; }
@@ -159,15 +181,23 @@
     <div class="barra">
         <a class="marca" th:href="@{/}">Noticias <em>Planeta</em></a>
         <nav aria-label="Secciones">
-            <a th:href="@{/(seccion='espana')}" th:aria-current="${seccion == 'espana'}">España</a>
-            <a th:href="@{/(seccion='economia')}" th:aria-current="${seccion == 'economia'}">Economía</a>
-            <a th:href="@{/(seccion='mundo')}" th:aria-current="${seccion == 'mundo'}">Mundo</a>
-            <a th:href="@{/(seccion='deportes')}" th:aria-current="${seccion == 'deportes'}">Deportes</a>
+            <a th:each="s : ${seccionesNav}"
+               th:href="@{/seccion/{slug}(slug=${s.slug()})}"
+               th:text="${s.nombre()}"
+               th:aria-current="${seccionActual != null and seccionActual.slug() == s.slug()}">Sección</a>
             <a th:href="@{/buscar}">Buscar</a>
         </nav>
     </div>
 </header>
 <main th:replace="${contenido}"></main>
+<nav class="paginacion" th:fragment="paginacion(urlBase)"
+     th:if="${pagina != null and pagina.totalPaginas() > 1}">
+    <a th:if="${pagina.hayAnterior()}"
+       th:href="${urlBase + '?pagina=' + (pagina.pagina() - 1)}">← Anteriores</a>
+    <span class="actual" th:text="${'Página ' + pagina.pagina() + ' de ' + pagina.totalPaginas()}">Página 1</span>
+    <a th:if="${pagina.haySiguiente()}"
+       th:href="${urlBase + '?pagina=' + (pagina.pagina() + 1)}">Siguientes →</a>
+</nav>
 <footer>Noticias Planeta · periodismo hiperlocal</footer>
 </body>
 </html>

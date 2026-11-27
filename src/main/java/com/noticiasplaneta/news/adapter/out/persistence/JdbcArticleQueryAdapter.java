@@ -21,6 +21,12 @@ class JdbcArticleQueryAdapter implements ArticleQueryRepository {
     @Override
     @Transactional(readOnly = true)
     public List<PublishedArticle> findPublished(String sectionId, int limit) {
+        return findPublished(sectionId, limit, 0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PublishedArticle> findPublished(String sectionId, int limit, int offset) {
         String sql = """
                 select a.id, a.slug, a.section_id, a.title, a.correction_note, a.published_at,
                        i.image_url, (ap.article_id is not null) as automatica
@@ -30,9 +36,20 @@ class JdbcArticleQueryAdapter implements ArticleQueryRepository {
                 where a.state = 'PUBLISHED'
                   and (?::text is null or a.section_id = ?)
                 order by a.published_at desc nulls last
-                limit ?
+                limit ? offset ?
                 """;
-        return jdbc.query(sql, (rs, n) -> map(rs), sectionId, sectionId, limit);
+        return jdbc.query(sql, (rs, n) -> map(rs), sectionId, sectionId, limit, Math.max(0, offset));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countPublished(String sectionId) {
+        Long total = jdbc.queryForObject("""
+                select count(*) from article
+                where state = 'PUBLISHED'
+                  and (?::text is null or section_id = ?)""",
+                Long.class, sectionId, sectionId);
+        return total == null ? 0 : total;
     }
 
     private static final java.time.format.DateTimeFormatter LABEL =

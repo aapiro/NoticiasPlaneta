@@ -3,6 +3,7 @@ package com.noticiasplaneta.news.application.service;
 import com.noticiasplaneta.news.application.port.in.ArticleText;
 import com.noticiasplaneta.news.application.port.in.GetPublishedArticleUseCase;
 import com.noticiasplaneta.news.application.port.in.ListPublishedArticlesUseCase;
+import com.noticiasplaneta.news.application.port.in.ListPublishedArticlesUseCase.Page;
 import com.noticiasplaneta.news.application.port.in.PublishedArticle;
 import com.noticiasplaneta.news.application.port.in.RetiredArticle;
 import com.noticiasplaneta.news.application.port.out.ArticleQueryRepository;
@@ -26,6 +27,20 @@ public class ArticleQueryService implements ListPublishedArticlesUseCase, GetPub
     @Override
     public List<PublishedArticle> latest(String sectionId, int limit) {
         return queries.findPublished(sectionId, Math.clamp(limit, 1, 100));
+    }
+
+    @Override
+    public Page paginar(String sectionId, int pagina, int tamano) {
+        int p = Math.max(1, pagina);
+        int t = Math.clamp(tamano, 1, 100);
+        long total = queries.countPublished(sectionId);
+        // Si piden una página más allá del final, se devuelve vacía en vez de la última:
+        // mentir sobre la página rompe el canonical y el rel=next.
+        int offset = (p - 1) * t;
+        var lista = offset >= total && total > 0
+                ? List.<PublishedArticle>of()
+                : queries.findPublished(sectionId, t, offset);
+        return new Page(lista, p, t, total);
     }
 
     @Override

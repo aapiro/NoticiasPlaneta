@@ -24,7 +24,9 @@ import java.util.Base64;
  * en local no estorba, y olvidarse de las variables no deja el panel abierto por
  * accidente... siempre que se configuren en producción. Si están, exige la cabecera.
  */
-@Component
+// Sin @Component a proposito: si Spring Boot lo registra tambien como filtro de
+// servlet, la respuesta se compromete antes de que Thymeleaf genere el token CSRF
+// del formulario de login y el panel deja de renderizarse.
 public class AdminBasicAuthFilter extends OncePerRequestFilter {
 
     private final byte[] esperado;
@@ -42,6 +44,12 @@ public class AdminBasicAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         if (esperado == null) {
+            // Solo en GET: es el render el que necesita la sesión para el token CSRF
+            // antes de llenar el buffer. En el POST de login no se crea, para que un
+            // intento fallido no deje sesión abierta.
+            if ("GET".equalsIgnoreCase(request.getMethod())) {
+                request.getSession(true);
+            }
             chain.doFilter(request, response);
             return;
         }
@@ -51,6 +59,13 @@ public class AdminBasicAuthFilter extends OncePerRequestFilter {
             byte[] recibido = cabecera.getBytes(StandardCharsets.UTF_8);
             // Comparación en tiempo constante: no filtrar por prefijo cuánto acierta.
             if (MessageDigest.isEqual(esperado, recibido)) {
+                // La sesión se abre AQUÍ, no cuando Thymeleaf pide el token CSRF.
+                // Si se deja para el render, una página que ya pasó del buffer de
+                // Tomcat (8 KB) commitea la respuesta y el token revienta con
+                // "Cannot create a session after the response has been committed".
+                if ("GET".equalsIgnoreCase(request.getMethod())) {
+                    request.getSession(true);
+                }
                 chain.doFilter(request, response);
                 return;
             }

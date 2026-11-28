@@ -2,6 +2,7 @@ package com.noticiasplaneta.identity.config;
 
 import com.noticiasplaneta.identity.adapter.in.security.SecurityProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -85,7 +86,8 @@ public class SecurityConfiguration {
     @Bean
     @Order(3)
     SecurityFilterChain adminChain(HttpSecurity http, AdminAuthenticator authenticator,
-                                   AdminBasicAuthFilter basicAuth) throws Exception {
+                                   @Value("${admin.basic.user:}") String basicUser,
+                                   @Value("${admin.basic.password:}") String basicPassword) throws Exception {
         http.securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login").permitAll()
@@ -93,8 +95,9 @@ public class SecurityConfiguration {
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         new LoginUrlAuthenticationEntryPoint("/admin/login")))
                 // Basic antes del login por formulario: sin la cabecera no se llega ni al TOTP.
-                .addFilterBefore(basicAuth, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(new AdminLoginFilter(authenticator),
+                .addFilterBefore(new AdminBasicAuthFilter(basicUser, basicPassword),
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new AdminLoginFilter(authenticator),
                         UsernamePasswordAuthenticationFilter.class)
                 .logout(l -> l.logoutUrl("/admin/logout").logoutSuccessUrl("/admin/login"))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))

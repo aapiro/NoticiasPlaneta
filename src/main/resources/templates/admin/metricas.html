@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Métricas — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Métricas de ingesta</h1>
+    <p class="meta">
+        Lo que entra frente a lo que se publica. Una fuente que trae cientos de piezas y
+        no aporta ninguna al portal no es una fuente: es ruido con feed.
+    </p>
+
+    <div class="tarjetas">
+        <div class="dato">
+            <span class="cifra" th:text="${informe.totales().articulos()}">0</span>
+            <span class="etiqueta">artículos</span>
+        </div>
+        <div class="dato">
+            <span class="cifra" th:text="${informe.totales().publicados()}">0</span>
+            <span class="etiqueta">publicados</span>
+        </div>
+        <div class="dato">
+            <span class="cifra" th:text="${informe.totales().borradores()}">0</span>
+            <span class="etiqueta">borradores</span>
+        </div>
+        <div class="dato">
+            <span class="cifra" th:text="${informe.totales().piezas()}">0</span>
+            <span class="etiqueta">piezas ingeridas</span>
+        </div>
+        <div class="dato">
+            <span class="cifra" th:text="${informe.totales().fuentesActivas() + '/' + informe.totales().fuentes()}">0/0</span>
+            <span class="etiqueta">fuentes activas</span>
+        </div>
+        <div class="dato">
+            <span class="cifra" th:text="${informe.totales().medios()}">0</span>
+            <span class="etiqueta">imágenes en casa</span>
+        </div>
+    </div>
+
+    <p class="aviso" th:if="${informe.totales().publicados() == 0}">
+        Nada publicado todavía. Las piezas están dentro: falta pasar por la bandeja.
+    </p>
+
+    <h2>Por fuente</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Medio</th>
+            <th>Piezas</th>
+            <th>Publicadas</th>
+            <th>Borradores</th>
+            <th>% al portal</th>
+            <th>Fallos</th>
+            <th>Última lectura</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="f : ${informe.porFuente()}">
+            <td>
+                <strong th:text="${f.nombre()}">Medio</strong>
+                <span class="estado" th:if="${f.estado() == 'DEGRADED'}">degradada</span>
+            </td>
+            <td th:text="${f.piezas()}">0</td>
+            <td th:text="${f.publicadas()}">0</td>
+            <td th:text="${f.borradores()}">0</td>
+            <td>
+                <div class="barra" th:title="${f.porcentajePublicado() + '%'}">
+                    <span th:style="'width:' + ${f.porcentajePublicado()} + '%'"></span>
+                </div>
+                <small th:text="${f.porcentajePublicado() + '%'}">0%</small>
+            </td>
+            <td th:text="${f.fallos()}">0</td>
+            <td th:text="${f.ultimaLectura() != null ? #temporals.format(f.ultimaLectura(), 'dd/MM HH:mm') : '—'}">—</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="aviso" th:if="${!informe.ruidosas().isEmpty()}">
+        <strong>Traen mucho y no publican nada:</strong>
+        <span th:each="r, i : ${informe.ruidosas()}"
+              th:text="${(i.index > 0 ? ', ' : '') + r.nombre() + ' (' + r.piezas() + ' piezas, ' + r.publicadas() + ' publicadas)'}">—</span>.
+        Merece la pena revisar si sus feeds aportan o solo llenan.
+    </div>
+
+    <h2>Actividad de los últimos <span th:text="${dias}">14</span> días</h2>
+    <p class="meta" th:if="${#lists.isEmpty(informe.dias())}">Sin actividad registrada.</p>
+    <div class="grafico" th:if="${!informe.dias().isEmpty()}">
+        <div class="columna" th:each="d : ${informe.dias()}">
+            <div class="barra-v" th:title="${d.piezas() + ' piezas, ' + d.publicadas() + ' publicadas'}">
+                <span th:style="'height:' + ${d.piezas() == 0 ? 1 : 100} + '%'"></span>
+            </div>
+            <small th:text="${d.fecha()}">dd/MM</small>
+        </div>
+    </div>
+
+    <p class="meta">
+        La columna es alta si ese día entraron piezas; el número exacto está en el
+        tooltip. Los días vacíos también se dibujan: un hueco dice más que una lista.
+    </p>
+</main>
+</body>
+</html>

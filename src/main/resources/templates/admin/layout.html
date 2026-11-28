@@ -75,6 +75,21 @@
         details summary { cursor:pointer; color:var(--tenue); font-size:.8rem; padding:.35rem 0; }
         .panel-fila { display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; padding:.4rem 0; }
         button.peligro { border-color:#b91c1c; color:#b91c1c; }
+        .tarjetas { display:flex; gap:.75rem; flex-wrap:wrap; margin:1.2rem 0; }
+        .dato { border:1px solid var(--linea); border-radius:10px; padding:.8rem 1.1rem;
+                min-width:8rem; }
+        .dato .cifra { display:block; font-size:1.5rem; font-weight:700; line-height:1.15; }
+        .dato .etiqueta { font-size:.75rem; color:var(--tenue); }
+        .barra { background:var(--linea); border-radius:999px; height:8px; width:100%;
+                 max-width:9rem; overflow:hidden; }
+        .barra span { display:block; height:100%; background:var(--acento); }
+        .grafico { display:flex; gap:4px; align-items:flex-end; height:90px; margin:1rem 0; }
+        .columna { flex:1; display:flex; flex-direction:column; align-items:center;
+                   justify-content:flex-end; height:100%; }
+        .barra-v { width:100%; height:100%; display:flex; align-items:flex-end; }
+        .barra-v span { display:block; width:100%; background:var(--acento);
+                        border-radius:2px 2px 0 0; min-height:1px; }
+        .columna small { font-size:.6rem; color:var(--tenue); }
         .campo { margin-bottom:.9rem; }
         label { display:block; font-size:.82rem; color:var(--tenue); margin-bottom:.25rem; }
         .meta { color:var(--tenue); font-size:.85rem; }
@@ -107,6 +122,7 @@
         <a class="chip" th:href="@{/admin/secciones}">Secciones</a>
         <a class="chip" th:href="@{/admin/fuentes}">Fuentes</a>
         <a class="chip" th:href="@{/admin/alertas}">Avisos</a>
+        <a class="chip" th:href="@{/admin/metricas}">Métricas</a>
         <a class="chip" th:href="@{/admin/media}">Imágenes</a>
         <a class="chip" th:href="@{/admin/generador}">Generador</a>
         <a class="chip" th:href="@{/admin/autopublicacion}">Automática</a>

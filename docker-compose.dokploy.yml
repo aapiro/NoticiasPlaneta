@@ -46,6 +46,9 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
       ADMIN_TOTP_SECRET: ${ADMIN_TOTP_SECRET:-}
+      # Segunda capa del panel (ADR-010). Sin estas dos el filtro no actua.
+      ADMIN_BASIC_USER: ${ADMIN_BASIC_USER:-}
+      ADMIN_BASIC_PASSWORD: ${ADMIN_BASIC_PASSWORD:-}
       # Langfuse está desactivado por defecto: sin claves, cada arranque
       # escupe errores de conexión que no significan nada.
       LANGFUSE_ENABLED: ${LANGFUSE_ENABLED:-false}

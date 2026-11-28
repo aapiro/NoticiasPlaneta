@@ -23,6 +23,12 @@ import com.noticiasplaneta.identity.adapter.in.security.AdminBasicAuthFilter;
 import com.noticiasplaneta.identity.adapter.in.security.AdminLoginFilter;
 import com.noticiasplaneta.identity.adapter.in.security.ApiKeyAuthenticationFilter;
 import com.noticiasplaneta.identity.application.AdminAuthenticator;
+import com.noticiasplaneta.identity.application.AccountAdminService;
+import com.noticiasplaneta.identity.application.port.in.AccountAdminUseCase;
+import com.noticiasplaneta.identity.application.port.out.AccountRepository;
+import com.noticiasplaneta.shared.domain.AuditPort;
+
+import java.time.Clock;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 /**
@@ -91,6 +97,10 @@ public class SecurityConfiguration {
         http.securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login").permitAll()
+                        // La gestión de cuentas es solo de la raíz. Un AGENT administra
+                        // contenido, pero no quién entra: si pudiera, se quitaría de en
+                        // medio a quien puede apagarlo.
+                        .requestMatchers("/admin/cuentas/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         new LoginUrlAuthenticationEntryPoint("/admin/login")))
@@ -103,6 +113,11 @@ public class SecurityConfiguration {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .csrf(org.springframework.security.config.Customizer.withDefaults());
         return http.build();
+    }
+
+    @Bean
+    AccountAdminUseCase accountAdminUseCase(AccountRepository accounts, AuditPort audit, Clock clock) {
+        return new AccountAdminService(accounts, audit, clock);
     }
 
     @Bean

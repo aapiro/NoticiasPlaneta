@@ -50,6 +50,12 @@ class AccountRepositoryAdapter implements AccountRepository {
         return jpa.count() > 0;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<Account> findAll() {
+        return jpa.findAll().stream().map(this::toDomain).toList();
+    }
+
     private Account toDomain(AccountJpaEntity e) {
         return new Account(e.id, e.email, e.displayName, Role.valueOf(e.role),
                 AccountState.valueOf(e.state), e.passwordHash, e.totpSecret, e.sections);

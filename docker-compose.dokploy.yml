@@ -46,6 +46,10 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
       ADMIN_TOTP_SECRET: ${ADMIN_TOTP_SECRET:-}
+      # Cuenta de trabajo del agente: un escalon por debajo de la raiz.
+      AGENT_EMAIL: ${AGENT_EMAIL:-}
+      AGENT_PASSWORD_HASH: ${AGENT_PASSWORD_HASH:-}
+      AGENT_TOTP_SECRET: ${AGENT_TOTP_SECRET:-}
       # Segunda capa del panel (ADR-010). Sin estas dos el filtro no actua.
       ADMIN_BASIC_USER: ${ADMIN_BASIC_USER:-}
       ADMIN_BASIC_PASSWORD: ${ADMIN_BASIC_PASSWORD:-}

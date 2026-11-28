@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: page('Cuentas — Panel', ~{::main})}">
+<body>
+<main>
+    <h1>Cuentas del panel</h1>
+    <p class="meta">
+        La raíz —el rol <strong>ADMIN</strong>— manda sobre todo lo demás. Un
+        <strong>AGENT</strong> administra contenido, fuentes y métricas, pero no aparece
+        en esta pantalla y no puede apagar a nadie. La jerarquía va en un solo sentido:
+        desde aquí se puede apagar o encender al agente, nunca al revés.
+    </p>
+    <p class="meta">
+        Una cuenta desactivada conserva su historial y sus piezas firmadas; simplemente
+        deja de poder entrar.
+    </p>
+
+    <div class="aviso" th:if="${ok}">
+        Hecho: <strong th:text="${ok}"></strong>
+    </div>
+    <div class="aviso error" th:if="${error}">
+        No se pudo: <strong th:text="${error}"></strong>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Cuenta</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acción</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${cuentas}">
+            <td>
+                <strong th:text="${c.nombre}">Nombre</strong>
+                <br>
+                <span class="meta" th:text="${c.email}">email</span>
+            </td>
+            <td>
+                <span th:text="${c.role}">ROLE</span>
+                <span th:if="${c.esLaRaiz}" class="meta">· raíz</span>
+            </td>
+            <td>
+                <span th:if="${c.activa()}" class="estado activa">activa</span>
+                <span th:unless="${c.activa()}" class="estado apagada">desactivada</span>
+                <span th:if="${c.soyYo}" class="meta">· tú</span>
+            </td>
+            <td>
+                <!-- La raíz no se apaga: sin ella nadie vuelve a encender el panel. -->
+                <span th:if="${c.esLaRaiz}" class="meta">protegida</span>
+                <form th:unless="${c.esLaRaiz}" class="inline"
+                      th:action="@{/admin/cuentas/{id}/estado(id=${c.id})}" method="post">
+                    <input type="hidden" name="activar" th:value="${!c.activa()}">
+                    <button type="submit" class="plano"
+                            th:text="${c.activa()} ? 'Desactivar' : 'Activar'">Desactivar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

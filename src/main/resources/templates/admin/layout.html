@@ -127,6 +127,7 @@
         <a class="chip" th:href="@{/admin/generador}">Generador</a>
         <a class="chip" th:href="@{/admin/autopublicacion}">Automática</a>
         <a class="chip" th:href="@{/admin/capacidades}">Capacidades IA</a>
+        <a class="chip" th:if="${esRaiz}" th:href="@{/admin/cuentas}">Cuentas</a>
     </nav>
     <form th:action="@{/admin/logout}" method="post" class="inline">
         <button type="submit" class="plano">Salir</button>

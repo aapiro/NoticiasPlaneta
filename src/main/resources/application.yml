@@ -40,6 +40,12 @@ admin:
     email: ${ADMIN_EMAIL:}
     password-hash: ${ADMIN_PASSWORD_HASH:}
     totp-secret: ${ADMIN_TOTP_SECRET:}
+    # Cuenta de trabajo del agente. Va un escalon por debajo de la raiz: administra
+    # contenido pero no cuentas, asi que no puede apagar al ADMIN.
+    agent:
+      email: ${AGENT_EMAIL:}
+      password-hash: ${AGENT_PASSWORD_HASH:}
+      totp-secret: ${AGENT_TOTP_SECRET:}
 
 # URL publica del sitio: la usan el sitemap, robots y las etiquetas Open Graph.
 # En produccion sera https://noticiasplaneta.com

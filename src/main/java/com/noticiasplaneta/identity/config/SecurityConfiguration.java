@@ -18,6 +18,7 @@ import org.springframework.security.web.webauthn.management.JdbcUserCredentialRe
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.security.web.webauthn.management.UserCredentialRepository;
 
+import com.noticiasplaneta.identity.adapter.in.security.AdminBasicAuthFilter;
 import com.noticiasplaneta.identity.adapter.in.security.AdminLoginFilter;
 import com.noticiasplaneta.identity.adapter.in.security.ApiKeyAuthenticationFilter;
 import com.noticiasplaneta.identity.application.AdminAuthenticator;
@@ -83,14 +84,17 @@ public class SecurityConfiguration {
 
     @Bean
     @Order(3)
-    SecurityFilterChain adminChain(HttpSecurity http, AdminAuthenticator authenticator) throws Exception {
+    SecurityFilterChain adminChain(HttpSecurity http, AdminAuthenticator authenticator,
+                                   AdminBasicAuthFilter basicAuth) throws Exception {
         http.securityMatcher("/admin/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         new LoginUrlAuthenticationEntryPoint("/admin/login")))
-                .addFilterBefore(new AdminLoginFilter(authenticator),
+                // Basic antes del login por formulario: sin la cabecera no se llega ni al TOTP.
+                .addFilterBefore(basicAuth, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new AdminLoginFilter(authenticator),
                         UsernamePasswordAuthenticationFilter.class)
                 .logout(l -> l.logoutUrl("/admin/logout").logoutSuccessUrl("/admin/login"))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))

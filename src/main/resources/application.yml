@@ -32,6 +32,10 @@ management:
         include: health,info
 
 admin:
+  # Segunda capa del panel (ADR-010). Vacias = filtro desactivado (desarrollo).
+  basic:
+    user: ${ADMIN_BASIC_USER:}
+    password: ${ADMIN_BASIC_PASSWORD:}
   bootstrap:
     email: ${ADMIN_EMAIL:}
     password-hash: ${ADMIN_PASSWORD_HASH:}
